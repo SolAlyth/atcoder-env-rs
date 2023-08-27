@@ -1,0 +1,17 @@
+[package]
+name = "atcoder"
+version = "0.1.0"
+edition = "2021"
+default-run = "main"
+
+[lib]
+name = "lib"
+
+[dependencies]
+proconio = "0.4.3"
+itertools = "0.10.5"
+petgraph = "0.6.3"
+superslice = "1.0.0"
+num-integer = "0.1.45"
+
+colored = "2.0.0"
