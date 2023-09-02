@@ -4,7 +4,8 @@ My environment for [AtCoder](https://atcoder.jp/) by [Rust](https://www.rust-lan
 
 ## solver.rs
 
-`Solver, end` を提供します。
+`struct Solver` を提供します。
+これで format string からおさらば！！
 
 ```rust
 fn main() {
@@ -24,6 +25,9 @@ Release 時は一度に出力します。
 
 
 ## nest.rs
+
+`nest!` を提供します。
+[Rust の多次元 Vec を初期化するマクロ](https://kuretchi.hateblo.jp/entry/rust_nested_vec)
 
 ```rust
 fn main() {
