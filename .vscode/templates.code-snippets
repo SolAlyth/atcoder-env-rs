@@ -23,9 +23,9 @@
 		"body": "eprintln!(\"{$0}\");"
 	},
 	
-	"return": {
+	"match else": {
 		"scope": "rust",
-		"prefix": "return",
-		"body": "return; "
+		"prefix": "_",
+		"body": "_ => { unreachable!(); }"
 	}
 }
