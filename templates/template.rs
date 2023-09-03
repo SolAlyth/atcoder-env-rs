@@ -30,9 +30,13 @@ mod mylib {
     
     pub fn yesno(b: bool) -> &'static str {if b{"Yes"}else{"No"}}
     
+    use std::{fmt::Display, ops::{Shl, Shr}, cell::UnsafeCell};
+    
     // bit
-    pub trait Bit { fn nth_bit(self, n: usize) -> Self; fn add_nth_bit(self, n: usize) -> Self; }
-    impl Bit for usize {fn nth_bit(self,n:usize)->Self{self>>n&1}fn add_nth_bit(self,n:usize)->Self{self|(1<<n)}}
+    #[derive(Clone, Copy)] struct Bit(usize);
+    impl Bit { fn get(self, n: usize) -> bool {self.0>>n&1==1} fn set(self, n: usize) -> Bit {Bit(1>>n|self.0)} }
+    impl Shl<usize> for Bit { type Output = Bit; fn shl(self, rhs: usize) -> Self::Output {self.set(rhs)} }
+    impl Shr<usize> for Bit { type Output = bool; fn shr(self, rhs: usize) -> Self::Output {self.get(rhs)} }
     
     // mod
     pub const MOD: u128 = 998244353;
@@ -42,7 +46,7 @@ mod mylib {
     #[macro_export] macro_rules! nest {(void;$n:expr)=>{vec![vec![];$n]};(void;$n:expr$(;$m:expr)+)=>{vec![nest![void$(;$m)+];$n]};($e:expr;$n:expr)=>{vec![$e;$n]};($e:expr;$n:expr$(;$m:expr)+)=>{vec![nest![$e$(;$m)+];$n]};}
     #[macro_export] macro_rules! eprintln {($($args:tt)*)=>{}}
     
-    use std::{fmt::Display, ops::Shl, cell::UnsafeCell};
+    // solver
     pub struct Solver { v: UnsafeCell<String>, b: bool }
     impl Solver {pub fn new(b: bool) -> Self {Solver{v:String::new().into(),b}} pub fn print(&self) {unsafe{let s=&mut*self.v.get();println!("{}", s);s.clear();}}}
     impl<T: Display> Shl<T> for &Solver {type Output=Self; fn shl(self,rhs:T)->Self::Output{unsafe{let s=&mut*self.v.get();if s.len()!=0{s.push(' ');}s.push_str(&format!("{}",rhs));}self}}

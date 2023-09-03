@@ -32,4 +32,5 @@ for fullfn in glob("./*.rs"):
         converted.append((fn, convert(f.read())))
 
 with open("converted.txt", "w") as outf:
-    outf.write("\n\n".join([f"[{v[0]}]\n\"{v[1]}\"" for v in converted]))
+    #outf.write("\n\n".join([f"[{v[0]}]\n\"{v[1]}\"" for v in converted]))
+    outf.write("\n\n".join([f"\"{v[1]}\"" for v in converted]))
