@@ -23,7 +23,7 @@
 		"body": "eprintln!(\"{$0}\");"
 	},
 	
-	"match else": {
+	"match unreachable": {
 		"scope": "rust",
 		"prefix": "_",
 		"body": "_ => { unreachable!(); }"
