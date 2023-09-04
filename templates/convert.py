@@ -21,16 +21,22 @@ def convert(s: str) -> str:
     return out
 
 
-from glob import glob
-from os.path import basename
+#from glob import glob
+#from os.path import basename
 
-converted = []
+#converted = []
 
-for fullfn in glob("./*.rs"):
-    fn = basename(fullfn)[:-3]
-    with open(f"{fn}.rs") as f:
-        converted.append((fn, convert(f.read())))
+#for fullfn in glob("./*.rs"):
+#    fn = basename(fullfn)[:-3]
+#    with open(f"{fn}.rs") as f:
+#        converted.append((fn, convert(f.read())))
+#
+#with open("converted.txt", "w") as outf:
+#    #outf.write("\n\n".join([f"[{v[0]}]\n\"{v[1]}\"" for v in converted]))
+#    outf.write("\n\n".join([f"\"{v[1]}\"" for v in converted]))
+
+with open("template.rs") as f:
+    out = f"\"{convert(f.read())}\""
 
 with open("converted.txt", "w") as outf:
-    #outf.write("\n\n".join([f"[{v[0]}]\n\"{v[1]}\"" for v in converted]))
-    outf.write("\n\n".join([f"\"{v[1]}\"" for v in converted]))
+    outf.write(out)
