@@ -21,7 +21,7 @@ fn main() {
 #[cfg(not(debug_assertions))] #[allow(dead_code)]
 mod mylib {
     pub use {
-        proconio::{input, marker::{Chars, Usize1}},
+        proconio::{input, marker::{Chars, Usize1 as usize1, Isize1 as isize1}},
         std::cmp::{min, max, Reverse as Rev},
         std::collections::{VecDeque, HashMap, HashSet, BTreeMap, BTreeSet, BinaryHeap},
         itertools::Itertools,
