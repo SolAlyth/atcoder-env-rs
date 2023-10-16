@@ -1,4 +1,4 @@
-trait Bit {
+pub trait Bit {
     fn get(&self, n: usize) -> bool;
     fn set_true(&mut self, n: usize);
     fn set_false(&mut self, n: usize);

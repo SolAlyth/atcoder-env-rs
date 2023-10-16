@@ -5,6 +5,7 @@ mod modulo; pub use modulo::*;
 mod bit; pub use bit::*;
 mod nest; pub use nest::*;
 mod prime; pub use prime::*;
+// mod unionfind; pub use unionfind::*;
 mod others; pub use others::*;
 
 // for debug

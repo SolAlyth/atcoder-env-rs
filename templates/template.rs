@@ -33,7 +33,7 @@ mod mylib {
     
     pub fn yesno(b: bool) -> &'static str {if b{"Yes"}else{"No"}}
     
-    use std::{fmt::Display, ops::{Shl, Shr, Not}, cell::UnsafeCell, mem::transmute, cmp::Ordering};
+    use std::{fmt::Display, ops::{Shl, Not}, cell::UnsafeCell, mem::transmute};
     
     // bit
     trait Bit {
@@ -47,23 +47,35 @@ mod mylib {
         fn set_false(&mut self, n: usize) {*self&=!(1<<n);}
     }
     
-    // mod
+    // modulo
     pub const i998: i128 = 998244353;
     pub const u998: u128 = 998244353;
 
-    trait Mod {
+    pub trait Mod {
         fn normalize(&self) -> Self;
         fn inv(&self) -> Self;
         fn mpow(self, p: Self) -> Self;
     }
-
     impl Mod for i128 {
         fn normalize(&self) -> Self {let a=self%i998;if a<0{a+i998}else{a}}
         fn inv(&self) -> Self {self.mpow(i998-2)}
-        fn mpow(mut self, mut p: Self) -> Self {let mut a=1;while p!=0{if p&1==1{a=a*self%i998;}self=self*self%i998;p<<=1;}a}
+        fn mpow(mut self, mut p: Self) -> Self {let mut a=1;while p!=0{if p&1==1{a=a*self%i998;}self=self*self%i998;p>>=1;}a}
     }
     
+    // prime
+    const psize: usize = 500_000;
     
+    pub struct PrimeTable<const size: usize = 1_000_000> { pub prime: [usize; psize], lpf: [usize; size], pl: usize }
+    impl<const size: usize> PrimeTable<size> {
+        pub const fn new() -> Self {let mut prime=[0;psize];let mut lpf=[0;size];let mut i=2;let mut pl=0;while i<size{if lpf[i]==0{prime[pl]=i;pl+=1;}let mut j=0;while j<pl&&i*prime[j]<size{lpf[i*prime[j]]=prime[j];j+=1;}i+=1;}Self{prime,lpf,pl}}
+        pub fn fact(&self, mut v: usize) -> HashMap<usize, usize> {let mut map=HashMap::new();if size<v{'a:for &p in self{while Self::trial(p,&mut v,&mut map){if v<=size{break 'a;}}}}while 2<=self.lpf[v]{*map.entry(self.lpf[v]).or_insert(0)+=1;v/=self.lpf[v];}map}
+        pub fn fact_spec(prime: &[usize], mut v: usize) -> HashMap<usize, usize> {let mut map=HashMap::new();for &p in prime{while Self::trial(p,&mut v,&mut map){if v==1{return map;}}}map.insert(v,1);map}
+        fn trial(p: usize, v: &mut usize, map: &mut HashMap<usize, usize>) -> bool {*v%p==0&&{*v/=p;*map.entry(p).or_insert(0)+=1;true}}}
+    impl<'a, const size: usize> IntoIterator for &'a PrimeTable<size> {
+        type Item = &'a usize; type IntoIter = std::slice::Iter<'a, usize>;
+        fn into_iter(self) -> Self::IntoIter {self.prime[..self.pl].iter()}
+    }
+
     // others
     #[macro_export] macro_rules! nest {(void;$n:expr)=>{vec![vec![];$n]};(void;$n:expr$(;$m:expr)+)=>{vec![nest![void$(;$m)+];$n]};($e:expr;$n:expr)=>{vec![$e;$n]};($e:expr;$n:expr$(;$m:expr)+)=>{vec![nest![$e$(;$m)+];$n]};}
     #[macro_export] macro_rules! eprintln {($($args:tt)*)=>{}}
@@ -76,8 +88,8 @@ mod mylib {
         pub fn push(&self, v: &str) {unsafe{let s=&mut*self.v.get();if sp||self.swapbf(sp)&&s.len()!=0{s.push(' ');}s.push_str(v);}}
         pub fn print(&self) {unsafe{let s=&mut*self.v.get();if s.len()!=0{println!("{}", s);s.clear();}}}
     }
-    impl<T: Display, const sp: bool> Shl<T> for &Solver<sp> {type Output=Self; fn shl(self,rhs:T)->Self::Output{self.push(&format!("{}",rhs)); self}}
+    impl<T: Display, const sp: bool> Shl<T> for &Solver<sp> {type Output=Self;fn shl(self,rhs:T)->Self::Output{self.push(&format!("{}",rhs)); self}}
     #[allow(non_camel_case_types)] pub struct end;
-    impl<const sp: bool> Shl<end> for &Solver<sp> {type Output=(); fn shl(self,_:end)->Self::Output{self.swapbf(true);if cfg!(debug_assertions)||self.b{self.print();}()}}
-    impl<'a> Not for &'a Solver<true> {type Output = &'a Solver<false>; fn not(self) -> Self::Output {unsafe{transmute(self)}}}
+    impl<const sp: bool> Shl<end> for &Solver<sp> {type Output=();fn shl(self,_:end)->Self::Output{self.swapbf(true);if cfg!(debug_assertions)||self.b{self.print();}()}}
+    impl<'a> Not for &'a Solver<true> {type Output=&'a Solver<false>;fn not(self)->Self::Output{unsafe{transmute(self)}}}
 }
