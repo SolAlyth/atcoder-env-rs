@@ -2,39 +2,38 @@
 
 use std::collections::HashMap;
 
-const psize: usize = 500_000;
+const lsize: usize = 1_000_000;
+const plsize: usize = 200_000;
 
-pub struct PrimeTable<const size: usize = 1_000_000> { pub prime: [usize; psize], lpf: [usize; size], pl: usize }
+pub struct PrimeTable { pub prime: Vec<usize>, lpf: Vec<usize> }
 
-impl<const size: usize> PrimeTable<size> {
-    pub const fn new() -> Self {
-        let mut prime = [0; psize];
-        let mut lpf = [0; size];
-        let mut i = 2; let mut pl = 0;
-        while i < size {
-            if lpf[i] == 0 { prime[pl] = i; pl += 1; }
-            let mut j = 0;
-            while j < pl && i*prime[j] < size {
-                lpf[i*prime[j]] = prime[j]; j += 1;
+impl PrimeTable {
+    pub fn new() -> Self {
+        let mut prime = vec![0; plsize];
+        let mut lpf = vec![0; lsize];
+        for i in 2..lsize {
+            if lpf[0] == 0 { prime.push(i); lpf[i] = i; }
+            for &j in &prime {
+                lpf[i*j] = j;
             }
-            i += 1;
         }
         
-        Self { prime, lpf, pl }
+        Self { prime, lpf }
     }
     
     pub fn fact(&self, mut v: usize) -> HashMap<usize, usize> {
         let mut map = HashMap::new();
         
-        if size < v {
+        if lsize < v {
             'a: for &p in self {
                 while Self::trial(p, &mut v, &mut map) {
-                    if v <= size { break 'a; }
+                    if v <= lsize { break 'a; }
                 }
             }
+            map.insert(v, 1); return map;
         }
         
-        while 2 <= self.lpf[v] {
+        while v != 1 {
             *map.entry(self.lpf[v]).or_insert(0) += 1;
             v /= self.lpf[v];
         }
@@ -50,14 +49,27 @@ impl<const size: usize> PrimeTable<size> {
         map.insert(v, 1); map
     }
     
+    pub fn fact_trial(mut v: usize) -> HashMap<usize, usize> {
+        let mut map = HashMap::new();
+        if v == 1 { return map; }
+        for p in 2.. {
+            while Self::trial(p, &mut v, &mut map) { if v == 1 { return map; } }
+        }
+        map
+    }
+    
+    pub fn is_prime(&self, v: usize) -> bool {
+        self.lpf[v] == v
+    }
+    
     fn trial(p: usize, v: &mut usize, map: &mut HashMap<usize, usize>) -> bool {
         *v % p == 0 && { *v /= p; *map.entry(p).or_insert(0) += 1; true }
     }
 }
 
-impl<'a, const size: usize> IntoIterator for &'a PrimeTable<size> {
+impl<'a> IntoIterator for &'a PrimeTable {
     type Item = &'a usize; type IntoIter = std::slice::Iter<'a, usize>;
-    fn into_iter(self) -> Self::IntoIter { self.prime[..self.pl].iter() }
+    fn into_iter(self) -> Self::IntoIter { self.prime.iter() }
 }
 
 
