@@ -35,8 +35,15 @@ def convert(s: str) -> str:
 #    #outf.write("\n\n".join([f"[{v[0]}]\n\"{v[1]}\"" for v in converted]))
 #    outf.write("\n\n".join([f"\"{v[1]}\"" for v in converted]))
 
-with open("template.rs") as f:
+with open("templates/template.rs") as f:
     out = f"\"{convert(f.read())}\""
 
-with open("converted.txt", "w") as outf:
+with open("templates/converted.txt", "w") as outf:
     outf.write(out)
+
+with open(".vscode/templates.code-snippets", "r") as f:
+    templates = f.readlines()
+
+with open(".vscode/templates.code-snippets", "w") as snippet_file:
+    templates[4] = f'\t\t"body": {out}'
+    snippet_file.writelines(templates)
