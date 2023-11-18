@@ -92,7 +92,7 @@ mod lib {
             use { std::{ops::{Shl, Not}, cell::UnsafeCell, mem::{transmute, swap}}, itertools::Itertools };
             pub struct Printer<const sp: bool = true> { v: UnsafeCell<String>, endf: bool, spf: UnsafeCell<bool> }
             impl Printer { pub fn new(endf: bool) -> Self { Printer { v: String::new().into(), endf, spf: true.into() } } }
-            impl<const sp: bool> Printer<sp> { fn swap_spf(&self, mut f: bool) -> bool { unsafe { swap(&mut *self.spf.get(), &mut f) } f} fn push(&self, v: &str) { unsafe { let s = &mut *self.v.get(); if !s.is_empty() && (sp || self.swap_spf(sp)) { *s += " "; } *s += v; } } pub fn print(&self) { unsafe { let s = &mut *self.v.get(); if !s.is_empty() { crate::pr!("{}", s); s.clear(); } } } }
+            impl<const sp: bool> Printer<sp> { fn swap_spf(&self, mut f: bool) -> bool { unsafe { swap(&mut *self.spf.get(), &mut f) } f} fn push(&self, v: &str) { unsafe { let s = &mut *self.v.get(); if (self.swap_spf(sp) || sp) && !s.is_empty() { *s += " "; } *s += v; } } pub fn print(&self) { unsafe { let s = &mut *self.v.get(); if !s.is_empty() { crate::pr!("{}", s); s.clear(); } } } }
             impl<T: PrinterDisplay, const sp: bool> Shl<T> for &Printer<sp> { type Output = Self; fn shl(self, rhs: T) -> Self::Output { self.push(&rhs.pdisp(sp)); self } }
             impl<'a> Not for &'a Printer<true> { type Output = &'a Printer<false>; fn not(self) -> Self::Output { unsafe { transmute(self) } } }
             pub struct end;
