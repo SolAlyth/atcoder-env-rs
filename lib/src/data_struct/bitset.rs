@@ -1,5 +1,5 @@
 use {
-    std::ops::{Deref, Index, IndexMut, BitAnd, BitOr, BitXor, Not},
+    std::ops::{Deref, Index, BitAnd, BitOr, BitXor, Not},
     itertools::Itertools
 };
 
@@ -11,52 +11,36 @@ pub struct BoolSet {
 
 impl BoolSet {
     fn sup(size: usize) -> usize { assert!(size < 64); 1<<size }
-    pub fn len(size: usize) -> usize { Self::sup(size) }
     pub fn max(size: usize) -> usize { Self::sup(size)-1 }
-    pub fn gen(size: usize) -> impl Iterator<Item = Self> {
-        let f = move |i| BoolSet { value: i, size };
-        (0..Self::sup(size)).map(f)
-    }
-    pub fn get(&self, idx: usize) -> bool { assert!(idx < 64); self.value>>idx & 1 == 1 }
+    pub fn gen(size: usize) -> impl Iterator<Item = Self> { (0..Self::sup(size)).map(move |i| BoolSet { value: i, size }) }
+    pub fn get(&self, idx: usize) -> bool { assert!(idx < self.size); self.value>>idx & 1 == 1 }
     pub fn set(&mut self, idx: usize, value: bool) {
-        if value { self.set_true(idx); } else { self.set_false(idx); }
+        assert!(idx < self.size);
+        if value { self.value |= 1<<idx; } else { self.value &= !(1<<idx); }
     }
-    pub fn set_true(&mut self, idx: usize) { assert!(idx < 64); self.value |= 1<<idx; }
-    pub fn set_false(&mut self, idx: usize) { assert!(idx < 64); self.value &= !(1<<idx); }
     pub fn count_true(&self) -> usize { self.value.count_ones() as usize }
     pub fn count_false(&self) -> usize { self.size - self.count_true() }
-    pub fn increment(mut self) -> Option<Self> {
-        if self.value != Self::max(self.size) { self.value += 1; Some(self) } else { None }
-    }
     pub fn is_empty(&self) -> bool { self.value == 0 }
 }
 
 impl BitAnd for BoolSet {
     type Output = Self;
-    fn bitand(mut self, rhs: Self) -> Self::Output {
-        self.value &= rhs.value; self
-    }
+    fn bitand(mut self, rhs: Self) -> Self::Output { self.value &= rhs.value; self }
 }
 
 impl BitOr for BoolSet {
     type Output = Self;
-    fn bitor(mut self, rhs: Self) -> Self::Output {
-        self.value |= rhs.value; self
-    }
+    fn bitor(mut self, rhs: Self) -> Self::Output { self.value |= rhs.value; self }
 }
 
 impl BitXor for BoolSet {
     type Output = Self;
-    fn bitxor(mut self, rhs: Self) -> Self::Output {
-        self.value ^= rhs.value; self
-    }
+    fn bitxor(mut self, rhs: Self) -> Self::Output { self.value ^= rhs.value; self }
 }
 
 impl Not for BoolSet {
     type Output = Self;
-    fn not(mut self) -> Self::Output {
-        self.value = !self.value; self
-    }
+    fn not(mut self) -> Self::Output { self.value = !self.value; self }
 }
 
 impl Deref for BoolSet {
@@ -67,16 +51,16 @@ impl Deref for BoolSet {
 
 #[derive(Clone)]
 pub struct BitSet<'a> {
-    bits: &'a [usize], data: Vec<usize>
+    bits: &'a [usize], data: Vec<usize>, pub value: usize
 }
 
 impl<'a> BitSet<'a> {
     pub fn min(bits: &'a [usize]) -> Self {
-        Self { bits, data: vec![0; bits.len()] }
+        Self { bits, data: vec![0; bits.len()], value: 0 }
     }
     
     pub fn max(bits: &'a [usize]) -> Self {
-        Self { bits, data: bits.into_iter().map(|&v| v-1).collect_vec() }
+        Self { bits, data: bits.iter().map(|&v| v-1).collect_vec(), value: bits.iter().product::<usize>()-1 }
     }
     
     pub fn increment(mut self) -> Option<Self> {
@@ -106,13 +90,10 @@ impl<'a> BitSet<'a> {
 
 impl<'a> Index<usize> for BitSet<'a> {
     type Output = usize;
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.data[index]
-    }
+    fn index(&self, index: usize) -> &Self::Output { &self.data[index] }
 }
 
-impl<'a> IndexMut<usize> for BitSet<'a> {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.data[index]
-    }
+impl<'a> Deref for BitSet<'a> {
+    type Target = usize;
+    fn deref(&self) -> &Self::Target { &self.value }
 }
