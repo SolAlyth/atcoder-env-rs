@@ -6,7 +6,7 @@ use {
 /// size, idx < 64
 #[derive(Clone, Copy)]
 pub struct BoolSet {
-    pub value: usize, pub size: usize
+    value: usize, size: usize
 }
 
 impl BoolSet {
@@ -51,7 +51,7 @@ impl Deref for BoolSet {
 
 #[derive(Clone)]
 pub struct BitSet<'a> {
-    bits: &'a [usize], data: Vec<usize>, pub value: usize
+    bits: &'a [usize], data: Vec<usize>, value: usize
 }
 
 impl<'a> BitSet<'a> {

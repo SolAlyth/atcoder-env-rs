@@ -32,7 +32,6 @@ impl<const sp: bool> Printer<sp> {
     fn push(&self, v: &str) {
         unsafe {
             let s = &mut *self.v.get();
-            crate::epr!("{} {}", sp, &*self.spf.get());
             // swap_spf が副作用を持つため、lazy 評価させない
             if (self.swap_spf(sp) || sp) && !s.is_empty() {
                 *s += " ";

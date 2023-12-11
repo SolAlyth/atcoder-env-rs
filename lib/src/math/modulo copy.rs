@@ -45,15 +45,18 @@ impl Mod for usize {
 
 
 
-#[derive(Default)]
-pub struct ModCalc {
-    fact: Vec<i128>,
-    fact_inv: Vec<i128>,
+pub struct ModCalc<const FACT_MAX: usize> {
+    fact: [i128; FACT_MAX],
+    fact_inv: [i128; FACT_MAX],
     inv: Vec<i128>
 }
 
-impl ModCalc {
-    pub fn new() -> Self {
+impl<const FACT_MAX: usize> ModCalc<FACT_MAX> {
+    pub const fn new() -> Self {
+        let (mut fact, mut fact_inv) = ([i128; FACT_MAX], [FACT_MAX]);
+        let mut i = 0;
+        fact[0] = 1;
+        
         ModCalc { fact: vec![1], fact_inv: vec![1], inv: vec![0, 1] }
     }
     
@@ -91,11 +94,11 @@ impl ModCalc {
     }
     
     pub fn combination(&mut self, n: usize, k: usize) -> i128 {
-        self.factorial(n) * self.factorial_inv(k) * self.factorial_inv(n-k)
+        self.factorial(n) * self.fact_inv[k] * self.fact_inv[n-k]
     }
     
     pub fn parmutation(&mut self, n: usize, k: usize) -> i128 {
-        self.factorial(n) * self.factorial_inv(n-k)
+        self.factorial(n) * self.fac
     }
     
     pub fn inv_linear(&mut self, mut value: i128) -> i128 {
