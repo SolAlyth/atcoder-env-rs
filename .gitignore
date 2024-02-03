@@ -1,0 +1,11 @@
+.vscode/*
+!.vscode/templates.code-snippets
+
+save
+
+src
+!mylib/src
+
+target
+
+Cargo.lock

@@ -1,13 +1,12 @@
 #![allow(non_snake_case)]
 
-use lib::*;
+use mylib::*;
 
 const INTERACTIVE: bool = false;
-const INPUT: &str = "";
 
 #[allow(unused_must_use)]
 fn solve<_T: BufRead>(#[allow(unused)] out: &Printer, mut stdin: impl Source<_T>) {
-    macro_rules! input {($($t:tt)*)=>{lib::input!(from &mut stdin, $($t)*);}}
+    macro_rules! input {($($t:tt)*)=>{mylib::input!(from &mut stdin, $($t)*);}}
     input! {
         /* $1 */
     }
@@ -16,10 +15,12 @@ fn solve<_T: BufRead>(#[allow(unused)] out: &Printer, mut stdin: impl Source<_T>
 }
 
 
+const INPUT: &str = "";
+
 
 fn main() {
-    let out = Printer::new(INTERACTIVE);
-    if !lib::SUBMISSION {
+    let out = Printer::new(INTERACTIVE || !mylib::SUBMISSION);
+    if !mylib::SUBMISSION {
         if INPUT != "" {
             solve(&out, OnceSource::from(INPUT));
         } else {
@@ -36,9 +37,27 @@ fn main() {
 }
 
 // You can see my library at https://github.com/SolAlyth/atcoder-env-rs
-#[cfg(not(debug_assertions))]
-mod lib {
+#[cfg(not(debug_assertions))] #[allow(unused)]
+mod mylib {
+    #![allow(non_upper_case_globals)]
+    
+    pub const SUBMISSION: bool = true;
+    
+    pub const us998: usize = 998244353;
+    pub const i998: i128 = 998244353;
+    pub const us107: usize = 1000000007;
+    pub const i107: i128 = 1000000007;
+    
+    const usmod: usize = us998;
+    const imod: i128 = i998;
+    
     pub use {
+        math::modulo::Modulo,
+        util::{
+            printer::{Printer, end},
+            traits::{AssignMinMax, CharFn}
+        },
+        
         proconio::{input, marker::{Chars as chars, Usize1 as usize1, Isize1 as isize1}, source::{Source, line::LineSource, once::OnceSource}},
         std::io::{BufReader, BufRead, stdin},
         std::cmp::{min, max, Reverse as Rev},
@@ -46,105 +65,91 @@ mod lib {
         std::mem::swap,
         itertools::Itertools,
         superslice::Ext,
-        num_integer::{gcd, lcm}
+        num_integer::{gcd, lcm, Roots}
     };
     
-    pub use {
-        data_struct::{
-            bitset::BoolSet,
-            unionfind::UnionFind,
-            compress::{Numbering, Compress}
-        },
-        math::modulo::{i998, us998, Mod, ModCalc},
-        
-        util::{
-            printer::{Printer, end},
-            traits::{Update, CharFn}
-        }
-    };
-    
-    pub const SUBMISSION: bool = true;
     
     pub mod data_struct {
         pub mod bitset {
-            use {std::ops::{Deref, Index, BitAnd, BitOr, BitXor, Not}, itertools::Itertools};
-            #[derive(Clone, Copy)] pub struct BoolSet { pub value: usize, pub size: usize }
-            impl BoolSet { fn sup(size: usize) -> usize { assert!(size < 64); 1<<size } pub fn max(size: usize) -> usize { Self::sup(size)-1 } pub fn gen(size: usize) -> impl Iterator<Item = Self> { (0..Self::sup(size)).map(move |i| BoolSet { value: i, size }) } pub fn get(&self, idx: usize) -> bool { assert!(idx < self.size); self.value>>idx & 1 == 1 } pub fn set(&mut self, idx: usize, value: bool) { assert!(idx < self.size); if value { self.value |= 1<<idx; } else { self.value &= !(1<<idx); } } pub fn count_true(&self) -> usize { self.value.count_ones() as usize } pub fn count_false(&self) -> usize { self.size - self.count_true() } pub fn is_empty(&self) -> bool { self.value == 0 } }
-            impl BitAnd for BoolSet { type Output = Self; fn bitand(mut self, rhs: Self) -> Self::Output { self.value &= rhs.value; self } }
-            impl BitOr for BoolSet { type Output = Self; fn bitor(mut self, rhs: Self) -> Self::Output { self.value |= rhs.value; self } }
-            impl BitXor for BoolSet { type Output = Self; fn bitxor(mut self, rhs: Self) -> Self::Output { self.value ^= rhs.value; self } }
-            impl Not for BoolSet { type Output = Self; fn not(mut self) -> Self::Output { self.value = !self.value; self } }
-            impl Deref for BoolSet { type Target = usize; fn deref(&self) -> &Self::Target { &self.value } }
+            use std::{ops::{BitAnd, BitOr, BitXor, Deref, Index, Not}, fmt::Debug};
+            use crate::mylib::util::iter::*;
+            #[derive(Clone, Copy)] pub struct BitSet { value: usize, len: usize }
+            impl BitSet { pub fn new(value: bool, len: usize) -> Self { BitSet { value: if value {!0} else {0}, len }.masked() } fn masked(mut self) -> Self { self.value &= BitSet::max(self.len); self } pub const fn sup(len: usize) -> usize { 1<<len } pub const fn max(len: usize) -> usize { Self::sup(len)-1 } pub fn generate(len: usize) -> impl DoubleEndedIterator<Item = Self> { (0..Self::sup(len)).map(move |i| BitSet { value: i, len }) } fn get_raw(&self, idx: usize) -> usize { assert!(idx < self.len); self.value>>idx & 1 } pub fn set(&mut self, idx: usize, value: bool) { assert!(idx < self.len); if value { self.value |= 1<<idx; } else { self.value &= !(1<<idx); } } pub fn count_true(&self) -> usize { self.value.count_ones() as usize } pub fn count_false(&self) -> usize { self.len - self.count_true() } pub fn is_full(&self) -> bool { self.value == BitSet::max(self.len) } pub fn is_empty(&self) -> bool { self.value == 0 } }
+            impl BitAnd for BitSet { type Output = Self; fn bitand(mut self, rhs: Self) -> Self::Output { assert_eq!(self.len, rhs.len); self.value &= rhs.value; self } }
+            impl BitOr for BitSet { type Output = Self; fn bitor(mut self, rhs: Self) -> Self::Output { assert_eq!(self.len, rhs.len); self.value |= rhs.value; self } }
+            impl BitXor for BitSet { type Output = Self; fn bitxor(mut self, rhs: Self) -> Self::Output { assert_eq!(self.len, rhs.len); self.value ^= rhs.value; self } }
+            impl Not for BitSet { type Output = Self; fn not(mut self) -> Self::Output { self.value = !self.value; self.masked() } }
+            impl Deref for BitSet { type Target = usize; fn deref(&self) -> &Self::Target { &self.value } }
+            impl Debug for BitSet { fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { write!(f, "{:?} ({})", self.into_iter().collect::<Vec<_>>(), self.value) } }
+            impl Index<usize> for BitSet { type Output = bool; fn index(&self, index: usize) -> &Self::Output { static A: [bool; 2] = [false, true]; &A[self.get_raw(index)] } }
+            impl GenericIterable for BitSet { type Item = bool; fn giter_next(&mut self, i: usize) -> Option<Self::Item> { if i < self.len { Some(self[i]) } else { None } } }
+            impl IntoIterator for BitSet { type Item = (usize, <Self as GenericIterable>::Item); type IntoIter = GenericIter<Self>; fn into_iter(self) -> Self::IntoIter { self.into() } }
         }
         pub mod compress {
-            use std::{collections::HashMap, hash::Hash, ops::Index};
+            use std::{collections::HashMap, hash::Hash};
             pub struct Numbering<T: Eq + Hash + Clone> { map: HashMap<T, usize>, vec: Vec<T> }
-            impl<T: Eq + Hash + Clone> Numbering<T> { pub fn new() -> Self { Numbering { map: HashMap::new(), vec: vec![] } } pub fn entry(&mut self, key: &T) -> usize { if self.map.contains_key(key) { self.map.insert(key.clone(), self.vec.len()); self.vec.push(key.clone()); } self.map[key] } pub fn get(&self, index: usize) -> &T { &self.vec[index] } }
-            impl<T: Eq + Hash + Clone> Index<usize> for Numbering<T> { type Output = T; fn index(&self, index: usize) -> &Self::Output { &self.get(index) } }
-            impl<T: Eq + Hash + Clone> Index<&T> for Numbering<T> { type Output = usize; fn index(&self, key: &T) -> &Self::Output { &self.map[key] } }
-            pub struct Compress<T: PartialOrd + Clone> { vec: Vec<T>, sorted: bool }
-            impl<T: PartialOrd + Clone> Compress<T> { pub fn new() -> Self { Compress { vec: vec![], sorted: false } } pub fn insert(&mut self, key: &T) { assert!(!self.sorted); self.vec.push(key.clone()); } pub fn calc(&mut self) { assert!(!self.sorted); self.sorted = true; self.vec.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap()); self.vec.dedup(); } pub fn get(&self, key: &T) -> usize { assert!(self.sorted); self.vec.binary_search_by(|v| v.partial_cmp(key).unwrap()).unwrap() } }
-            impl<T: PartialOrd + Clone> Index<usize> for Compress<T> { type Output = T; fn index(&self, index: usize) -> &Self::Output { &self.vec[index] } }
+            impl<T: Eq + Hash + Clone> Numbering<T> { pub fn new() -> Self { Numbering { map: HashMap::new(), vec: vec![] } } pub fn entry(&mut self, key: &T) -> usize { if !self.map.contains_key(key) { self.map.insert(key.clone(), self.vec.len()); self.vec.push(key.clone()); } self.map[key] } pub fn get(&self, index: usize) -> &T { &self.vec[index] } }
+            pub struct Compress<T: Ord> (Vec<T>);
+            impl<T: Ord> Compress<T> { pub fn new() -> Self { Compress(vec![]) } pub fn insert(&mut self, key: T) { self.0.push(key); } pub fn insert_with(&mut self, iter: impl Iterator<Item = T>) { for key in iter { self.insert(key); } } pub fn calc(mut self) -> Compressed<T> { self.0.sort_unstable(); self.0.dedup(); Compressed(self.0) } }
+            pub struct Compressed<T: Ord> (Vec<T>);
+            impl<T: Ord> Compressed<T> { pub fn entry(&self, key: &T) -> usize { self.0.binary_search(key).unwrap() } pub fn get(&self, idx: usize) -> &T { &self.0[idx] } }
         }
         pub mod unionfind {
-            use std::mem::swap;
-            #[derive(Clone, Copy)] pub enum Item { Leader(usize), Child(usize) }
-            pub struct UnionFindCore<T, U> { data: Vec<Item>, pub value: Vec<T>, cmpf: fn(&mut [T], usize, usize, usize), mgf: fn(&mut [T], usize, usize, usize, usize, U) -> bool, invf: fn(&mut U) }
-            impl<T, U> UnionFindCore<T, U> { fn compress(&mut self, child: usize, parent_new: usize) { let Item::Child(parent_old) = self.data[child] else { assert_eq!(child, parent_new); return; }; if parent_old == parent_new { return; } self.compress(parent_old, parent_new); self.data[child] = Item::Child(parent_new); (self.cmpf)(&mut self.value, child, parent_old, parent_new); } fn leader_and_size(&mut self, u: usize) -> (usize, usize) { match self.data[u] { Item::Leader(size) => { (u, size) } Item::Child(par) => { let (leader, size) = self.leader_and_size(par); self.compress(u, leader); (leader, size) } } } pub fn merge(&mut self, mut child: usize, mut parent: usize, mut arg: U) -> Result<bool, ()> { if self.size(parent) < self.size(child) { swap(&mut parent, &mut child); (self.invf)(&mut arg); } let ((cl, cs), (pl, ps)) = (self.leader_and_size(child), self.leader_and_size(parent)); let res = (self.mgf)(&mut self.value, child, cl, parent, pl, arg); if res { if cl != pl { self.data[pl] = Item::Leader(ps+cs); self.data[cl] = Item::Child(pl); Ok(true) } else { Ok(false) } } else { Err(()) } } pub fn leader(&mut self, u: usize) -> usize { self.leader_and_size(u).0 } pub fn size(&mut self, u: usize) -> usize { self.leader_and_size(u).1 } pub fn is_same(&mut self, u: usize, v: usize) -> bool { self.leader(u) == self.leader(v) } pub fn len(&self) -> usize { self.data.len() } pub fn group(&mut self, u: usize) -> Vec<usize> { (0..self.len()).filter(|&v| self.is_same(u, v)).collect() } pub fn groups(&mut self) -> Vec<Vec<usize>> { let mut out = vec![vec![]; self.len()]; for u in 0..self.len() { out[self.leader(u)].push(u); } out.dedup(); out } }
-            pub struct UnionFind { inner: UnionFindCore<(), ()> }
-            impl UnionFind { pub fn new(size: usize) -> Self { UnionFind { inner: UnionFindCore { data: vec![Item::Leader(1); size], value: vec![(); size], cmpf: |_: &mut _, _, _, _| {}, mgf: |_: &mut _, _, _, _, _, _| true, invf: |_: &mut _| {} } } } pub fn leader(&mut self, u: usize) -> usize { self.inner.leader(u) } pub fn size(&mut self, u: usize) -> usize { self.inner.size(u) } pub fn is_same(&mut self, u: usize, v: usize) -> bool { self.inner.is_same(u, v) } pub fn len(&self) -> usize { self.inner.len() } pub fn group(&mut self, u: usize) -> Vec<usize> { self.inner.group(u) } pub fn groups(&mut self) -> Vec<Vec<usize>> { self.inner.groups() } pub fn merge(&mut self, u: usize, v: usize) -> bool { self.inner.merge(u, v, ()).unwrap() } }
+            use crate::nest;
+            #[derive(Clone, Copy)] enum Node { Leader(usize), Child(usize) }
+            #[derive(Clone)] pub struct UnionFind { nodes: Vec<Node> }
+            impl UnionFind { pub fn new(len: usize) -> Self { UnionFind { nodes: vec![Node::Leader(1); len] } } fn leader_and_size(&mut self, u: usize) -> (usize, usize) { let mut now = u; let mut stack = vec![]; let (leader, size) = loop { match self.nodes[now] { Node::Leader(size) => { break (now, size); } Node::Child(par) => { stack.push(now); now = par; } } }; for &i in stack.iter().rev() { self.nodes[i] = Node::Child(leader); } (leader, size) } pub fn leader(&mut self, u: usize) -> usize { self.leader_and_size(u).0 } pub fn size(&mut self, u: usize) -> usize { self.leader_and_size(u).1 } pub fn is_same(&mut self, u: usize, v: usize) -> bool { self.leader(u) == self.leader(v) } pub fn merge(&mut self, u: usize, v: usize) -> bool { let ((mut ul, us), (mut vl, vs)) = (self.leader_and_size(u), self.leader_and_size(v)); if us < vs { std::mem::swap(&mut ul, &mut vl); } if ul != vl { self.nodes[ul] = Node::Leader(us+vs); self.nodes[vl] = Node::Child(ul); } ul != vl } pub fn group(&mut self, mut u: usize) -> Vec<usize> { u = self.leader(u); (0..self.nodes.len()).filter(|&v| self.leader(v) == u).collect() } pub fn groups(&mut self) -> Vec<Vec<usize>> { let mut out = nest![void; self.nodes.len()]; for u in 0..self.nodes.len() { out[self.leader(u)].push(u); } out.retain(|v| v.len() != 0); out } }
             type WeightType = i128;
-            pub struct WeightedUnionFind { inner: UnionFindCore<WeightType, WeightType> }
-            impl WeightedUnionFind { pub fn new(size: usize) -> Self { WeightedUnionFind { inner: UnionFindCore { data: vec![Item::Leader(1); size], value: vec![0; size], cmpf: |value: &mut [WeightType], child, parent_old, _| { value[child] += value[parent_old]; }, mgf: |value: &mut [WeightType], c, cl, p, pl, arg| { if cl != pl { value[cl] = arg + value[p] - value[c]; true } else { value[p] - value[c] == arg } }, invf: |arg: &mut _| { *arg *= -1; } } } } pub fn leader(&mut self, u: usize) -> usize { self.inner.leader(u) } pub fn size(&mut self, u: usize) -> usize { self.inner.size(u) } pub fn is_same(&mut self, u: usize, v: usize) -> bool { self.inner.is_same(u, v) } pub fn len(&self) -> usize { self.inner.len() } pub fn group(&mut self, u: usize) -> Vec<usize> { self.inner.group(u) } pub fn groups(&mut self) -> Vec<Vec<usize>> { self.inner.groups() } pub fn merge(&mut self, child: usize, parent: usize, arg: WeightType) -> Result<bool, ()> { self.inner.merge(child, parent, arg) } pub fn dist(&mut self, child: usize, parent: usize) -> Option<WeightType> { if self.is_same(child, parent) { Some(self.inner.value[child] - self.inner.value[parent]) } else { None } } }
+            #[derive(Clone)] pub struct WeightedUnionFind { nodes: Vec<Node>, diff: Vec<WeightType> }
+            impl WeightedUnionFind { pub fn new(len: usize) -> Self { WeightedUnionFind { nodes: vec![Node::Leader(1); len], diff: vec![0; len] } } fn leader_and_size(&mut self, u: usize) -> (usize, usize) { let mut now = u; let mut stack = vec![]; let (leader, size) = loop { match self.nodes[now] { Node::Leader(size) => { break (now, size); } Node::Child(par) => { stack.push(now); now = par; } } }; for &child in stack.iter().rev() { let Node::Child(parent) = self.nodes[child] else { unreachable!(); }; self.nodes[child] = Node::Child(leader); self.diff[child] += self.diff[parent]; } (leader, size) } pub fn leader(&mut self, u: usize) -> usize { self.leader_and_size(u).0 } pub fn size(&mut self, u: usize) -> usize { self.leader_and_size(u).1 } pub fn is_same(&mut self, u: usize, v: usize) -> bool { self.leader(u) == self.leader(v) } pub fn weight(&mut self, u: usize, v: usize) -> Result<WeightType, ()> { if self.leader(u) == self.leader(v) { Ok(-self.diff[u] + self.diff[v]) } else { Err(()) } } pub fn merge(&mut self, u: usize, v: usize, mut w: WeightType) -> Result<bool, ()> { let ((mut ul, us), (mut vl, vs)) = (self.leader_and_size(u), self.leader_and_size(v)); if us < vs { std::mem::swap(&mut ul, &mut vl); w = -w; } if ul != vl { self.nodes[ul] = Node::Leader(us+vs); self.nodes[vl] = Node::Child(ul); Ok(true) } else { if self.weight(u, v).unwrap() == w { Ok(false) } else { Err(()) } } } pub fn group(&mut self, mut u: usize) -> Vec<usize> { u = self.leader(u); (0..self.nodes.len()).filter(|&v| self.leader(v) == u).collect() } pub fn groups(&mut self) -> Vec<Vec<usize>> { let mut out = nest![void; self.nodes.len()]; for u in 0..self.nodes.len() { out[self.leader(u)].push(u); } out.retain(|v| v.len() != 0); out } }
         }
     }
     
     pub mod math {
         pub mod modulo {
-            #![allow(non_upper_case_globals)]
-            pub const i998: i128 = 998244353;
-            pub const us998: usize = 998244353;
-            pub trait Mod: Copy { fn normalize(self) -> Self; fn mpow(self, p: usize) -> Self; fn update(&mut self) -> Self { *self = self.normalize(); *self } fn inv(self) -> Self { self.mpow(998244353-2) } }
-            impl Mod for i128 { fn normalize(mut self) -> Self { if self < 0 || i998 <= self { self %= i998; if self < 0 { self += i998; } } self } fn mpow(mut self, mut p: usize) -> Self { let mut out = 1; while p != 0 { if p&1 == 1 { out *= self; out.update(); } self = self.pow(2).normalize(); p >>= 1; } out } }
-            impl Mod for usize { fn normalize(mut self) -> Self { if us998 <= self { self %= us998; } self } fn mpow(mut self, mut p: usize) -> Self { let mut out = 1; while p != 0 { if p&1 == 1 { out *= self; out.update(); } self = (self.pow(2)).normalize(); p >>= 1; } out } }
-            #[derive(Default)] pub struct ModCalc { fact: Vec<i128>, fact_inv: Vec<i128>, inv: Vec<i128> }
-            impl ModCalc { pub fn new() -> Self { ModCalc { fact: vec![1], fact_inv: vec![1], inv: vec![0, 1] } } fn update_factrial(&mut self, n: usize) { if n < self.fact.len() { return; } self.fact.reserve(n+1); for i in self.fact.len()..=n { self.fact[i] = (self.fact[i-1] * i as i128).normalize(); } } fn update_factorial_inv(&mut self, mut n: usize) { if n < self.fact_inv.len() { return; } self.fact_inv.resize(n+1, 0); self.fact_inv[n] = self.factorial(n).inv(); while self.fact_inv[n-1] == 0 { self.fact_inv[n-1] = (self.fact_inv[n] * n as i128).normalize(); n -= 1; } } fn update_inv_linear(&mut self, n: usize) { if n < self.inv.len() { return; } for i in self.inv.len()..=n { self.inv[i] = (i998 - (i998/i as i128) * self.inv[us998%i]).normalize(); } } pub fn factorial(&mut self, n: usize) -> i128 { self.update_factrial(n); self.fact[n] } pub fn factorial_inv(&mut self, n: usize) -> i128 { self.update_factorial_inv(n); self.fact_inv[n] } pub fn combination(&mut self, n: usize, k: usize) -> i128 { self.factorial(n) * self.factorial_inv(k) * self.factorial_inv(n-k) } pub fn parmutation(&mut self, n: usize, k: usize) -> i128 { self.factorial(n) * self.factorial_inv(n-k) } pub fn inv_linear(&mut self, mut value: i128) -> i128 { assert!(value != 0); self.update_inv_linear(value.update() as usize); self.inv[value as usize] } }
+            use super::super::{imod, usmod};
+            pub trait Modulo: Copy { fn simplify(self) -> Self; fn mpow(self, a: usize) -> Self; fn minv_fermat(self) -> Self { self.mpow(usmod-2) } }
+            impl Modulo for i128 { fn simplify(mut self) -> Self { if !(0..imod).contains(&self) { self %= imod; if self < 0 { self += imod; } } self } fn mpow(mut self, mut a: usize) -> Self { let mut out = 1; while a != 0 { if a&1 == 1 { out = (out * self).simplify(); } self = self.pow(2).simplify(); a >>= 1; } out } }
         }
     }
     
     pub mod util {
         pub mod printer {
             #![allow(non_camel_case_types, non_upper_case_globals)]
-            use { std::{ops::{Shl, Not}, cell::UnsafeCell, mem::{transmute, swap}}, itertools::Itertools };
-            pub struct Printer<const sp: bool = true> { v: UnsafeCell<String>, endf: bool, spf: UnsafeCell<bool> }
-            impl Printer { pub fn new(endf: bool) -> Self { Printer { v: String::new().into(), endf, spf: true.into() } } }
-            impl<const sp: bool> Printer<sp> { fn swap_spf(&self, mut f: bool) -> bool { unsafe { swap(&mut *self.spf.get(), &mut f) } f} fn push(&self, v: &str) { unsafe { let s = &mut *self.v.get(); if (self.swap_spf(sp) || sp) && !s.is_empty() { *s += " "; } *s += v; } } pub fn print(&self) { unsafe { let s = &mut *self.v.get(); if !s.is_empty() { crate::pr!("{}", s); s.clear(); } } } }
+            use { std::{ops::{Shl, Not}, cell::{UnsafeCell, Cell}, mem::transmute}, itertools::Itertools };
+            #[macro_export] macro_rules! pr { ($($args:tt)*) => { println!($($args)*); } }
+            #[macro_export] macro_rules! epr { ($($args:tt)*) => { } }
+            pub struct Printer<const sp: bool = true> { out: UnsafeCell<String>, endf: bool, bsp: Cell<bool> }
+            impl Printer { pub fn new(endf: bool) -> Self { Printer { out: String::new().into(), endf, bsp: true.into() } } }
+            impl<const sp: bool> Printer<sp> { fn push(&self, v: &str) { unsafe { let s = &mut *self.out.get(); if (self.bsp.replace(sp) || sp) && !s.is_empty() { *s += " "; } *s += v; } } pub fn print(&self) { unsafe { let s = &mut *self.out.get(); if !s.is_empty() { pr!("{}", s); s.clear(); } } } }
             impl<T: PrinterDisplay, const sp: bool> Shl<T> for &Printer<sp> { type Output = Self; fn shl(self, rhs: T) -> Self::Output { self.push(&rhs.pdisp(sp)); self } }
             impl<'a> Not for &'a Printer<true> { type Output = &'a Printer<false>; fn not(self) -> Self::Output { unsafe { transmute(self) } } }
             pub struct end;
-            impl<const sp: bool> Shl<end> for &Printer<sp> { type Output=(); fn shl(self, _:end) -> Self::Output { self.swap_spf(true); if self.endf { self.print(); } } }
+            impl<const sp: bool> Shl<end> for &Printer<sp> { type Output = (); fn shl(self, _: end) -> Self::Output { self.bsp.replace(true); if self.endf { self.print(); } } }
             trait PrinterDisplay { fn pdisp(&self, sp: bool) -> String; }
             trait PrimitivePrinterDisplay: PrinterDisplay {}
             macro_rules! fall { ($($t:ty);+) => { $( impl PrinterDisplay for $t { fn pdisp(&self, _: bool) -> String { format!("{}", self) } } impl PrimitivePrinterDisplay for $t {} )+ }; }
-            fall!( u8; u16; u32; u64; u128; usize; i8; i16; i32; i64; i128; isize; f32; f64; char; &str; String );
+            fall!( u8; u16; u32; u64; u128; usize; i8; i16; i32; i64; i128; isize; f32; f64; char; &str; &String; String );
             impl PrinterDisplay for bool { fn pdisp(&self, _: bool) -> String { String::from(if *self {"Yes"} else {"No"}) } }
             impl PrimitivePrinterDisplay for bool {}
             impl<T: PrimitivePrinterDisplay> PrinterDisplay for Vec<T> { fn pdisp(&self, sp: bool) -> String { self.iter().map(|v| v.pdisp(sp)).join(if sp {" "} else {""}) } }
             impl<T: PrimitivePrinterDisplay> PrinterDisplay for &[T] { fn pdisp(&self, sp: bool) -> String { self.iter().map(|v| v.pdisp(sp)).join(if sp {" "} else {""}) } }
         }
         pub mod traits {
-            pub trait Update: Sized + PartialOrd { fn update_max(&mut self, value: Self) { if (self as &Self).partial_cmp(&value).unwrap().is_lt() { *self = value; } } fn update_min(&mut self, value: Self) { if (self as &Self).partial_cmp(&value).unwrap().is_gt() { *self = value; } } }
-            macro_rules! impl_update { ($($t:ty);+) => { $( impl Update for $t {} )+ }; }
+            pub trait AssignMinMax: Sized + PartialOrd { fn assign_max(&mut self, value: Self) { if (self as &Self).partial_cmp(&value).unwrap().is_lt() { *self = value; } } fn assign_min(&mut self, value: Self) { if (self as &Self).partial_cmp(&value).unwrap().is_gt() { *self = value; } } }
+            macro_rules! impl_update { ($($t:ty);+) => { $( impl AssignMinMax for $t {} )+ }; }
             impl_update!(u8; u16; u32; u64; u128; i8; i16; i32; i64; i128; f32; f64);
-            pub trait CharFn: Copy { fn add(self, v: isize) -> Self; fn to_lower(self) -> Self; fn to_upper(self) -> Self; fn lower_to_us(self) -> usize; fn upper_to_us(self) -> usize; fn num_to_us(self) -> usize; }
-            impl CharFn for char { fn add(self, v: isize) -> Self { (self as isize + v) as u8 as char } fn to_lower(self) -> Self { self.add(32) } fn to_upper(self) -> Self { self.add(-32) } fn lower_to_us(self) -> usize { self as usize - 97 } fn upper_to_us(self) -> usize { self as usize - 65 } fn num_to_us(self) -> usize { self as usize - 48 } }
-        }
-        pub mod color_print {
-            #[macro_export] macro_rules! pr { ($($args:tt)*) => { println!($($args)*); } }
-            #[macro_export] macro_rules! epr { ($($args:tt)*) => { } }
+            pub trait CharFn: Copy { fn add(self, v: isize) -> Self; fn to_lower(self) -> Self; fn to_upper(self) -> Self; fn lower_to_us(self) -> usize; fn upper_to_us(self) -> usize; fn num_to_us(self) -> usize; fn into_lower(v: usize) -> Self; fn into_upper(v: usize) -> Self; }
+            impl CharFn for char { fn add(self, v: isize) -> Self { (self as isize + v) as u8 as char } fn to_lower(self) -> Self { self.add(32) } fn to_upper(self) -> Self { self.add(-32) } fn lower_to_us(self) -> usize { self as usize - 97 } fn upper_to_us(self) -> usize { self as usize - 65 } fn num_to_us(self) -> usize { self as usize - 48 } fn into_lower(v: usize) -> Self { (v+97) as u8 as char } fn into_upper(v: usize) -> Self { (v+65) as u8 as char } }
         }
         pub mod macros {
             #[macro_export] macro_rules! nest { (void; $n:expr) => { vec![vec![];$n] }; (void; $n:expr $(;$m:expr)+) => { vec![nest![void$(;$m)+]; $n] }; ($e:expr; $n:expr) => { vec![$e; $n] }; ($e:expr; $n:expr $(;$m:expr)+) => { vec![nest![$e$(;$m)+]; $n] }; }
+        }
+        pub mod iter {
+            pub struct GenericIter<T: GenericIterable>(T, usize);
+            pub trait GenericIterable: Sized { type Item; fn giter_next(&mut self, i: usize) -> Option<Self::Item>; }
+            impl<T: GenericIterable> From<T> for GenericIter<T> { fn from(value: T) -> Self { GenericIter(value, 0) } }
+            impl<T: GenericIterable> Iterator for GenericIter<T> { type Item = (usize, T::Item); fn next(&mut self) -> Option<Self::Item> { let tmp = self.0.giter_next(self.1); self.1 += 1; tmp.map(|v| (self.1, v)) } }
         }
     }
 }

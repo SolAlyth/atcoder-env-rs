@@ -38,8 +38,8 @@ def convert(s: str) -> str:
 with open("templates/template.rs", encoding="utf-8") as f:
     out = f"\"{convert(f.read())}\""
 
-with open("templates/converted.txt", "w", encoding="utf-8") as outf:
-    outf.write(out)
+#with open("templates/converted.txt", "w", encoding="utf-8") as outf:
+    # outf.write(out)
 
 with open(".vscode/templates.code-snippets", "r", encoding="utf-8") as f:
     templates = f.readlines()
