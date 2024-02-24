@@ -5,7 +5,7 @@ enum Node { Leader(usize), Child(usize) }
 
 
 
-/// Union Find a.k.a. Disjoint Set.
+/// Union Find (Disjoint Set.)
 ///
 /// # Complexity
 ///
@@ -20,9 +20,7 @@ enum Node { Leader(usize), Child(usize) }
 /// |group, groups| O(n) |
 
 #[derive(Clone)]
-pub struct UnionFind {
-    nodes: Vec<Node>
-}
+pub struct UnionFind { nodes: Vec<Node> }
 
 impl UnionFind {
     pub fn new(len: usize) -> Self {
