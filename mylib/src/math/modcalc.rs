@@ -1,4 +1,4 @@
-use super::super::{imod, usmod, math::modulo::Modulo};
+use crate::mylib::{imod, usmod, math::modulo::Modulo};
 
 /// 色々計算できるやつ。
 pub struct ModCalc {

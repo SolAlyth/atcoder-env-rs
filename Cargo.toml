@@ -2,18 +2,11 @@
 name = "atcoder"
 version = "0.1.0"
 edition = "2021"
-default-run = "main"
+default-run = "main2"
 
 [workspace]
 # cargo ... -p mylib
-members = ["mylib"]
+members = ["mylib", "util"]
 
 [dependencies]
 mylib = { path = "mylib" }
-ac-library-rs = "0.1.1"
-
-[package.metadata.docs.rs]
-rustdoc-args = [
-    "--html-in-header",
-    "katex.html",
-]

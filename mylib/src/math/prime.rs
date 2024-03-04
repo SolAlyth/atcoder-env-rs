@@ -1,86 +1,59 @@
 // #![allow(non_upper_case_globals)]
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
-const LPF_SIZE: usize = 1_000_000;
-
-type PMap = HashMap<usize, usize>;
-
-pub struct PrimeTable { pub prime: Vec<usize>, lpf: Vec<usize> }
+pub struct PrimeTable { max: usize, _primes: Vec<usize>, lpf: Vec<usize> }
 
 impl PrimeTable {
-    pub fn new() -> Self {
-        let mut prime = vec![];
-        let mut lpf: Vec<usize> = vec![0; LPF_SIZE];
+    /// `[0, max]` のテーブルを作成する。`O(N)`
+    /// 
+    /// # Panic
+    /// 
+    /// `3 <= max` でないとき。(壊れたら怖いので)
+    pub fn new(max: usize) -> Self {
+        assert!(3 <= max);
+        let mut primes = vec![];
+        let mut lpf = vec![0; max+1];
         
-        for i in 2..LPF_SIZE {
-            if lpf[i] == 0 { prime.push(i); lpf[i] = i; }
-            for &j in &prime {
-                if lpf[i] < j || LPF_SIZE <= i*j { break; }
-                if j <= lpf[i] { lpf[i*j] = j; }
+        for i in 2..=max {
+            if lpf[i] == 0 { primes.push(i); lpf[i] = i; }
+            let lpfi = lpf[i];
+            for &p in primes.iter().take_while(|&&p| p <= lpfi && i*p <= max) {
+                lpf[i*p] = p;
             }
         }
         
-        Self { prime, lpf }
+        PrimeTable { max, _primes: primes, lpf }
     }
     
-    pub fn fact(&self, mut v: usize) -> PMap {
-        let mut map = HashMap::new();
-        
-        if LPF_SIZE < v {
-            'a: for &p in self {
-                while Self::trial(p, &mut v, &mut map) {
-                    if v <= LPF_SIZE { self.fact_by_lpf(&mut v, &mut map); break 'a; }
-                }
-            }
-            if v != 1 { map.insert(v, 1); }
-        } else {
-            self.fact_by_lpf(&mut v, &mut map);
-        }
-        
-        map
-    }
-    
-    fn fact_by_lpf(&self, v: &mut usize, map: &mut PMap) {
-        while *v != 1 {
-            *map.entry(self.lpf[*v]).or_insert(0) += 1;
-            *v /= self.lpf[*v];
-        }
-    }
-    
-    pub fn fact_spec(prime: &[usize], mut v: usize) -> PMap {
-        let mut map = HashMap::new();
-        for &p in prime {
-            while Self::trial(p, &mut v, &mut map) { if v == 1 { return map; } }
-        }
-        map.insert(v, 1); map
-    }
-    
-    pub fn fact_trial(mut v: usize) -> PMap {
-        let mut map = HashMap::new();
-        if v == 1 { return map; }
-        for p in 2.. {
-            while Self::trial(p, &mut v, &mut map) { if v == 1 { return map; } }
-        }
-        map
-    }
-    
+    /// `v` が素数であるかを判定する。`v <= max` なら `O(1)`, そうでないなら試し割りで `O(√N)`
     pub fn is_prime(&self, v: usize) -> bool {
-        self.lpf[v] == v
+        if v <= self.max {
+            self.lpf[v] == v
+        } else {
+            Iterator::chain(self._primes.iter().cloned(), self.max+1..).take_while(|&p| p.pow(2) <= v).all(|p| v%p != 0)
+        }
     }
     
-    fn trial(p: usize, v: &mut usize, map: &mut PMap) -> bool {
-        *v % p == 0 && { *v /= p; *map.entry(p).or_insert(0) += 1; true }
+    /// `v` を素因数分解する。
+    pub fn fact(&self, mut v: usize) -> BTreeMap<usize, usize> {
+        assert_ne!(v, 0);
+        let mut out = BTreeMap::new();
+        
+        for p in Iterator::chain(self._primes.iter().cloned(), self.max+1..) {
+            if v <= self.max {
+                while v != 1 {
+                    *out.entry(self.lpf[v]).or_default() += 1;
+                    v /= self.lpf[v];
+                }
+                break;
+            }
+            if v < p*p { *out.entry(v).or_default() += 1; break; }
+            while v%p == 0 { v /= p; *out.entry(p).or_default() += 1; }
+        }
+        
+        out
     }
+    
+    pub fn primes(&self) -> &[usize] { &self._primes }
 }
-
-impl<'a> IntoIterator for &'a PrimeTable {
-    type Item = &'a usize; type IntoIter = std::slice::Iter<'a, usize>;
-    fn into_iter(self) -> Self::IntoIter { self.prime.iter() }
-}
-
-
-/* impl std::ops::Index<usize> for PrimeTable {
-    type Output = usize;
-    fn index(&self, index: usize) -> &Self::Output {&self.l[index]}
-} */

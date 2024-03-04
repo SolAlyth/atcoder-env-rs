@@ -1,70 +1,73 @@
 #![allow(non_upper_case_globals)]
 
+#[allow(unused_imports)]
 pub(crate) use crate as mylib;
 
 pub const SUBMISSION: bool = false;
 
 pub const us998: usize = 998244353;
 pub const i998: i128 = 998244353;
+// pub const us107: usize = 1000000007;
+// pub const i107: i128 = 1000000007;
 
-pub const us107: usize = 1000000007;
-pub const i107: i128 = 1000000007;
-
-const usmod: usize = us998;
-const imod: i128 = i998;
+pub type Mint = ac_library::ModInt998244353;
 
 pub mod data_struct {
     pub mod bitset;
     pub mod unionfind;
     pub mod compress;
+    pub mod sqrtset;
     pub mod segtree;
+    pub mod inversible;
+    
+    // pub mod multiset;
     // pub mod rolling_hash;
     
-    pub mod rational;
-    
-    pub mod traits;
+    // pub mod segtree_new;
 }
 
 pub mod util {
     pub mod printer;
     pub mod macros;
-    
     pub mod traits;
-    pub mod hash;
-    pub mod iter;
+    pub mod char;
+    pub mod etc;
 }
 
 pub mod math {
-    pub mod modulo;
-    pub mod modcalc;
     pub mod prime;
+    // pub mod modint;
+    // pub mod modcalc;
 }
 
-pub mod geometry {
+/* pub mod geometry {
     pub mod basis;
+} */
+
+pub mod traits {
+    pub mod abstracts;
 }
 
 
 #[doc(hidden)]
 pub use {
-    math::modulo::Modulo,
     util::{
-        printer::{Printer, end},
-        traits::{AssignMinMax, CharFn}
+        printer::{Printer, end, EndFlag},
+        traits::{ChangeMinMax, WrappingAddSignedForPair},
+        etc::LRUD
     },
     
     proconio::{
         input,
-        marker::{Chars as chars, Usize1 as usize1, Isize1 as isize1},
+        marker::{Bytes as bytes, Chars as chars, Usize1 as usize1, Isize1 as isize1},
         source::{Source, line::LineSource, once::OnceSource}
     },
     std::io::{BufReader, BufRead, stdin},
-    std::cmp::{min, max, Reverse as Rev},
-    std::collections::{VecDeque, HashMap, HashSet, BTreeMap, BTreeSet, BinaryHeap},
+    std::collections::{VecDeque, HashMap, HashSet, BTreeMap, BTreeSet},
     std::mem::swap,
-    itertools::Itertools,
+    itertools::{Itertools, iproduct, izip},
     superslice::Ext,
-    num_integer::{gcd, lcm, Roots}
+    num::integer::{gcd, lcm, Roots}
 };
 
 
