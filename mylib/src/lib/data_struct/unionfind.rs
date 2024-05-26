@@ -41,10 +41,7 @@ impl UnionFind {
             }
         };
         
-        // 特別な処理をしないから帰りがけ順にしなくてもいいんだけど、統一性を持たせたいと思ったので
-        for &i in stack.iter().rev() {
-            self.nodes[i] = Node::Child(leader);
-        }
+        for i in stack { self.nodes[i] = Node::Child(leader); }
         
         (leader, size)
     }
@@ -83,7 +80,7 @@ type WeightType = i128;
 
 /// Weighted Union Find.
 ///
-/// `diff[parent] = 0, diff[child] = weight[parent] - diff[child]` を持ち、経路圧縮や merge 時に適切に処理する。
+/// `diff[parent] = 0, diff[child] = weight[parent] - weight[child]` を持ち、経路圧縮や merge 時に適切に処理する。
 ///
 /// # Complexity
 ///
