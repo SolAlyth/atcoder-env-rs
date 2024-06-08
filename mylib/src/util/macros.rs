@@ -19,13 +19,13 @@ macro_rules! epr {
 /// 
 /// `!Clone` な要素を入れるときは `void` は出来ない
 #[macro_export]
-macro_rules! v {
+macro_rules! nest {
     (void; $n:expr) => { vec![vec![]; $n] };
-    (void; $n:expr $(;$m:expr)+) => { vec![v![void$(;$m)+]; $n] };
+    (void; $n:expr $(;$m:expr)+) => { vec![nest![void$(;$m)+]; $n] };
     
     () => { vec![] };
     ($e:expr; $n:expr) => { vec![$e; $n] };
-    ($e:expr; $n:expr $(;$m:expr)+) => { vec![v![$e$(;$m)+]; $n] };
+    ($e:expr; $n:expr $(;$m:expr)+) => { vec![nest![$e$(;$m)+]; $n] };
 }
 
 #[macro_export]
@@ -42,7 +42,8 @@ macro_rules! max {
 
 
 
-
+/// `elsedef!(cond; value)` の形で使う。
+/// `cond == true` のとき `value` を返し、そうでないとき `Default::default()` を返す。
 #[macro_export]
 macro_rules! elsedef {
     ($cond:expr; $v:expr) => { if $cond {$v} else {Default::default()} }

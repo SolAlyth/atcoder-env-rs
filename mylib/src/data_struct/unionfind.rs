@@ -1,4 +1,4 @@
-use crate::v;
+use crate::nest;
 
 #[derive(Clone, Copy)]
 /// `Node::Leader` は集合の要素数を持ち、`Node::Child` は親のインデックスを持つ。
@@ -56,7 +56,7 @@ impl UnionFind {
     }
     
     pub fn groups(&mut self) -> Vec<Vec<usize>> {
-        let mut out = v![void; self.nodes.len()];
+        let mut out = nest![void; self.nodes.len()];
         for u in 0..self.nodes.len() { out[self.leader(u)].push(u); }
         out.retain(|v| v.len() != 0); out
     }
@@ -142,7 +142,7 @@ impl WeightedUnionFind {
     }
     
     pub fn groups(&mut self) -> Vec<Vec<usize>> {
-        let mut out = v![void; self.nodes.len()];
+        let mut out = nest![void; self.nodes.len()];
         for u in 0..self.nodes.len() { out[self.leader(u)].push(u); }
         out.retain(|v| v.len() != 0); out
     }

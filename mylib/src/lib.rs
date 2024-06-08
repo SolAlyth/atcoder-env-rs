@@ -16,9 +16,10 @@ pub mod data_struct {
     pub mod bitset;
     pub mod unionfind;
     pub mod compress;
-    pub mod sqrtset;
+    // pub mod sqrtset;
     pub mod segtree;
     pub mod inversible;
+    // pub mod rangeset;
     
     // pub mod multiset;
     // pub mod rolling_hash;
@@ -30,8 +31,7 @@ pub mod util {
     pub mod printer;
     pub mod macros;
     pub mod traits;
-    pub mod char;
-    pub mod etc;
+    pub mod func;
 }
 
 pub mod math {
@@ -53,8 +53,7 @@ pub mod traits {
 pub use {
     util::{
         printer::{Printer, end, EndFlag},
-        traits::{ChangeMinMax, WrappingAddSignedForPair},
-        etc::LRUD
+        traits::*
     },
     
     proconio::{
