@@ -11,41 +11,38 @@
 		"body": "epr!(\"{$0}\");"
 	},
 	
-	"vectors": {
+	"nested vector": {
 		"scope": "rust",
-		"prefix": "vec",
-		"body": "v![$0];"
+		"prefix": "nest",
+		"body": "nest![$0];"
 	},
 	
-	"match with unreachable": {
+	"unreachable match": {
 		"scope": "rust",
-		"prefix": "match_unreachable",
-		"body": [
-			"match $1 {",
-			"\t$0",
-			"\t_ => { unreachable!(); }",
-			"}"
-		]
+		"prefix": "snp_match_unreachable",
+		"body": "_ => { unreachable!(); }"
 	},
 	
-	"match LRUD": {
+	"LRUD match": {
 		"scope": "rust",
-		"prefix": "match_lrud",
+		"prefix": "snp_match_lrud",
 		"body": [
 			"match $0 {",
-			"\t'L' => { /* i-- */ }",
-			"\t'R' => { /* i++ */ }",
-			"\t'U' => { /* j-- */ }",
-			"\t'D' => { /* j++ */ }",
+			"\t'L' => {",
+			"\t\t/* i-- */",
+			"\t}",
+			"\t'R' => {",
+			"\t\t/* i++ */",
+			"\t}",
+			"\t'U' => {",
+			"\t\t/* j-- */",
+			"\t}",
+			"\t'D' => {",
+			"\t\t/* j++ */",
+			"\t}",
 			"}"
 		]
 	},
-	
-	/* "match unreachable": {
-		"scope": "rust",
-		"prefix": "_",
-		"body": "_ => { unreachable!(); }"
-	}, */
 	
 	"累積和": {
 		"scope": "rust",
@@ -65,54 +62,12 @@
 			
 			"// [l..r] の加算: { sa[l] += v; sa[r] -= v; }",
 			"let mut sa = vec![0; $0.len()];",
-			"for i in 0..$0.len() { sa[i] = $0[i] - if i!=0 {$0[i-1]} else {0}; }",
+			"for i in 0..$0.len() { sa[i] = $0[i] - elsedef!(i!=0; $0[i-1]); }",
 			"",
 			"",
 			"",
 			"let mut rest = vec![0; $0.len()];",
-			"for i in 0..$0.len() { rest[i] = sa[i] + if i!=0 {rest[i-1]} else {0}; }"
-		]
-	},
-	
-	"Dijkstra 法": {
-		"scope": "rust",
-		"prefix": "snp_dijkstra",
-		"description": "cost が最小になるように探索をする例。非負重みグラフなら使える。",
-		"body": [
-			"let mut cost = vec![inf as _; ${1:edge_len}];",
-			"cost[${2:init_edge}] = 0;",
-			"let mut queue = BTreeSet::from([(0, $2)]); // 代入済み、更新待ち",
-			"",
-			"while let Some((c, i)) = queue.pop_first() {",
-			"    for &(to, pathc) in &E[i] {",
-			"        let toc = c + pathc;",
-			"        if cost[to] <= toc { continue; } // 更新できない条件",
-			"        ",
-			"        queue.remove((cost[to], to));",
-			"        cost[to] = toc;",
-			"        queue.insert((toc, to));",
-			"    }",
-			"}"
-		]
-	},
-	
-	"Bellman-Ford 法": {
-		"scope": "rust",
-		"prefix": "snp_bellman_ford",
-		"description": "",
-		"body": [
-			"let mut cost = vec![inf as _; ${1:edge_len}];",
-			"cost[${2:init_edge}] = 0;",
-			"",
-			"for i in 0..$1-1 {",
-			"    for &(to, pathc) in &E[i] {",
-			"        let toc = cost[i] + ",
-			"        ",
-			"        ",
-			"        ",
-			"    }",
-			"    ",
-			"}"
+			"for i in 0..$0.len() { rest[i] = sa[i] + elsedef!(i!=0; rest[i-1]); }"
 		]
 	},
 	
@@ -123,11 +78,10 @@
 			"let mut queue = VecDeque::from([$1]);",
 			"while let Some(q) = queue.pop_front() {",
 			"\tfor &to in &E[q] {",
-			"\t\tif $2 { continue; }",
+			"\t\tif todo!(\"skip condition\") { continue; }",
 			"\t\t",
 			"\t\t$0",
 			"\t\t",
-			"\t\t$3",
 			"\t\tqueue.push_back(to);",
 			"\t}",
 			"}"
