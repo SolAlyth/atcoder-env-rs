@@ -2,7 +2,7 @@
 name = "atcoder"
 version = "0.1.0"
 edition = "2021"
-default-run = "main2"
+default-run = "main3"
 
 [workspace]
 # cargo ... -p mylib

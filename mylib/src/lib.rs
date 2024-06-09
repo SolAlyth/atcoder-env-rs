@@ -29,6 +29,7 @@ pub mod data_struct {
 
 pub mod util {
     pub mod printer;
+    // pub mod printer_old;
     pub mod macros;
     pub mod traits;
     pub mod func;
@@ -52,14 +53,13 @@ pub mod traits {
 #[doc(hidden)]
 pub use {
     util::{
-        printer::{Printer, end, EndFlag},
+        printer::{out, end, EndFlag},
         traits::*
     },
     
     proconio::{
-        input,
-        marker::{Bytes as bytes, Chars as chars, Usize1 as usize1, Isize1 as isize1},
-        source::{Source, line::LineSource, once::OnceSource}
+        input, input_interactive,
+        marker::{Bytes as bytes, Chars as chars, Usize1 as usize1, Isize1 as isize1}
     },
     std::io::{BufReader, BufRead, stdin},
     std::collections::{VecDeque, HashMap, HashSet, BTreeMap, BTreeSet},

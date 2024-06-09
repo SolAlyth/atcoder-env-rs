@@ -2,7 +2,7 @@
 	"Initialize for AtCoder": {
 		"scope": "rust",
 		"prefix": "init",
-		"body": "#![allow(non_snake_case)]\n\nuse mylib::*;\n\nconst INTERACTIVE: bool = false;\n\n#[allow(unused_must_use)]\nfn solve<_T: BufRead>(#[allow(unused)] out: &Printer, mut stdin: impl Source<_T>) {\n\tmacro_rules! input {(\\$(\\$t:tt)*)=>{mylib::input!(from &mut stdin, \\$(\\$t)*);}}\n\tinput! {\n\t\t$1\n\t}\n\t\n\t$0\n}\n\n\n\nfn _input() -> String { String::from(\"\") }\n\n\nfn main() {\n\tlet out = Printer::new(if SUBMISSION && !INTERACTIVE {EndFlag::LineFeed} else {EndFlag::Print});\n\t\n\tif !SUBMISSION {\n\t\tlet inp = _input();\n\t\tif !inp.is_empty() {\n\t\t\tsolve(&out, OnceSource::from(inp.as_str()));\n\t\t} else {\n\t\t\tsolve(&out, LineSource::new(BufReader::new(stdin())));\n\t\t}\n\t} else {\n\t\tif !INTERACTIVE {\n\t\t\tsolve(&out, OnceSource::new(BufReader::new(stdin())));\n\t\t} else {\n\t\t\tsolve(&out, LineSource::new(BufReader::new(stdin())));\n\t\t}\n\t}\n\tout.print();\n}"
+		"body": "#![allow(unused_must_use, non_snake_case)]\n\nuse mylib::*;\nconst INTERACTIVE: bool = false;\n\nfn solve() {\n\tinput! {\n\t\t$1\n\t}\n\t\n\t$0\n}\n\n\n\nfn main() {\n\tout.init(if INTERACTIVE || !SUBMISSION { EndFlag::Print } else {EndFlag::LineFeed});\n\tsolve();\n\tout.print();\n}\n\n// cargo test -- --nocapture\n#[test]\nfn test() {\n\tout.init(EndFlag::Print);\n\tout.print();\n}"
 	},
 	
 	"stderr print": {

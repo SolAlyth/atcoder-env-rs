@@ -1,12 +1,4 @@
 #[macro_export]
-macro_rules! pr {
-    ($($args:tt)*) => {
-        if !$crate::SUBMISSION { eprint!("\x1b[32m"); print!("{}", format!($($args)*).split('\n').map(|s| format!(">> {s}\n")).reduce(|acc,s| acc+&s).unwrap()); eprint!("\x1b[0m"); }
-        if $crate::SUBMISSION { println!($($args)*); }
-    }
-}
-
-#[macro_export]
 macro_rules! epr {
     ($($args:tt)*) => {
         if !$crate::SUBMISSION { eprint!("\x1b[31m"); print!("{}", format!($($args)*).split('\n').map(|s| format!(">> {s}\n")).reduce(|acc,s| acc+&s).unwrap()); eprint!("\x1b[0m"); }
