@@ -3,7 +3,7 @@
 pub use crate::mylib::traits::abstracts::{Map, Monoid};
 use std::marker::PhantomData;
 
-pub mod affine;
+// pub mod affine;
 
 
 

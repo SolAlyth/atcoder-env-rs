@@ -104,7 +104,7 @@ trait PrinterDisplay { fn pdisp(&self, sp: bool, buf: &mut String); }
 
 /// `PrinterDisplay` を `Display` に fallback させる
 macro_rules! fall { ($($t:ty),+) => { $( impl PrinterDisplay for $t { fn pdisp(&self, _: bool, buf: &mut String) { *buf += &format!("{self}"); } } )+ }; }
-fall!( u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, f32, f64, crate::mylib::Mint );
+fall!( u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, f32, f64, ac_library::ModInt998244353, ac_library::ModInt1000000007 );
 
 impl PrinterDisplay for char { fn pdisp(&self, _: bool, buf: &mut String) { buf.push(*self); } }
 impl PrinterDisplay for &str { fn pdisp(&self, _: bool, buf: &mut String) { buf.push_str(self); } }

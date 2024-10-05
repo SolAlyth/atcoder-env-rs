@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::nest;
 
 #[derive(Clone, Copy)]
@@ -6,9 +8,7 @@ enum Node { Leader(usize), Child(usize) }
 
 
 
-/// Union Find (Disjoint Set)
-/// 
-/// `Node::Leader` は集合の要素数を持つ実装。
+/// Union Find (union by size)
 #[derive(Clone)]
 pub struct UnionFind { nodes: Vec<Node> }
 
@@ -17,17 +17,15 @@ impl UnionFind {
         UnionFind { nodes: vec![Node::Leader(1); len] }
     }
     
-    /// Leader と size を返す。同時に経路圧縮を行う。
-    fn leader_and_size(&mut self, u: usize) -> (usize, usize) {
-        let mut now = u;
+    fn leader_and_size(&mut self, mut u: usize) -> (usize, usize) {
         let mut stack = vec![];
         
         loop {
-            match self.nodes[now] {
-                Node::Child(par) => { stack.push(now); now = par; }
+            match self.nodes[u] {
+                Node::Child(par) => { stack.push(u); u = par; }
                 Node::Leader(size) => {
-                    for i in stack { self.nodes[i] = Node::Child(now); }
-                    return (now, size);
+                    for i in stack { self.nodes[i] = Node::Child(u); }
+                    return (u, size);
                 }
             }
         }
@@ -40,15 +38,15 @@ impl UnionFind {
     /// u を含むグループと v を含むグループを結合する。
     /// 結合に成功したら `true` を返し、元々結合されていたら `false` を返す。
     pub fn merge(&mut self, u: usize, v: usize) -> bool {
-        let ((mut ul, us), (mut vl, vs)) = (self.leader_and_size(u), self.leader_and_size(v));
+        let ((mut u, us), (mut v, vs)) = (self.leader_and_size(u), self.leader_and_size(v));
         
-        if ul != vl {
-            if us < vs { (ul, vl) = (vl, ul); }
-            self.nodes[ul] = Node::Leader(us+vs);
-            self.nodes[vl] = Node::Child(ul);
+        if u != v {
+            if us < vs { (u, v) = (v, u); }
+            self.nodes[u] = Node::Leader(us+vs);
+            self.nodes[v] = Node::Child(u);
         }
         
-        ul != vl
+        u != v
     }
     
     pub fn group(&mut self, mut u: usize) -> Vec<usize> {
@@ -62,19 +60,18 @@ impl UnionFind {
     }
 }
 
+impl Debug for UnionFind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use itertools::Itertools;
+        let mut uf = self.clone();
+        write!(f, "[{}]", uf.groups().into_iter().map(|v| format!("{{{}}}", v.into_iter().join(", "))).join(", "))
+    }
+}
 
-type WeightType = i128;
 
-/// Weighted Union Find
-///
-/// `diff[leader] = 0, diff[child] = weight[child] - weight[parent]` を持ち、経路圧縮や merge 時に適切に処理する。
-/// 
-/// 「頂点 `u` から頂点 `v` に重さ `w` の辺を作る」とは、`weight[v] = weight[u] + w` が成り立つように `diff` を変更すること。  
-/// ( `u -> v` ベクトルなイメージ )
-///
-/// # Complexity
-///
-/// [`UnionFind`] と同じ。
+type WeightType = i64;
+
+/// Weighted Union Find (union by size)
 
 #[derive(Clone)]
 pub struct WeightedUnionFind {
@@ -89,22 +86,19 @@ impl WeightedUnionFind {
         WeightedUnionFind { nodes: vec![Node::Leader(1); len], diff: vec![0; len] }
     }
     
-    /// `Leader` と `size` を返す。同時に経路圧縮を行う。
-    fn leader_and_size(&mut self, u: usize) -> (usize, usize) {
-        let mut now = u;
+    fn leader_and_size(&mut self, mut u: usize) -> (usize, usize) {
         let mut stack = vec![];
         
         loop {
-            match self.nodes[now] {
-                Node::Child(par) => { stack.push(now); now = par; }
+            match self.nodes[u] {
+                Node::Child(par) => { stack.push(u); u = par; }
                 Node::Leader(size) => {
                     for &child in stack.iter().rev() {
                         let Node::Child(parent) = self.nodes[child] else { unreachable!(); };
-                        self.nodes[child] = Node::Child(now);
+                        self.nodes[child] = Node::Child(u);
                         self.diff[child] += self.diff[parent];
                     }
-                    
-                    return (now, size);
+                    return (u, size);
                 }
             }
         }
@@ -114,22 +108,20 @@ impl WeightedUnionFind {
     pub fn size(&mut self, u: usize) -> usize { self.leader_and_size(u).1 }
     pub fn is_same(&mut self, u: usize, v: usize) -> bool { self.leader(u) == self.leader(v) }
     
-    /// 頂点 u から頂点 v への辺の重さを返す。同じグループに属さない場合、`Err` を返す。
+    /// 頂点 u に対する頂点 v の辺の重さを返す。
     pub fn weight(&mut self, u: usize, v: usize) -> Result<WeightType, ()> {
         if self.leader(u) == self.leader(v) { Ok(-self.diff[u] + self.diff[v]) } else { Err(()) }
     }
     
-    /// 頂点 u から頂点 v に重さ w の辺ができるよう結合する。
-    /// 結合に成功したら `Ok(true)` を返し、元々結合されていたら `Ok(false)` を返す。前の情報と矛盾する場合は `Err` を返す。
-    pub fn merge(&mut self, u: usize, v: usize, mut w: WeightType) -> Result<bool, ()> {
+    /// `weight[u] + w = weight[v]` が成り立つよう結合する。
+    /// 結合に成功したら `Ok(true)` を返し、元々結合されていてかつ操作が矛盾しないなら `Ok(false)` を返す。矛盾する場合は `Err(())` を返す。
+    pub fn merge(&mut self, mut u: usize, mut v: usize, mut w: WeightType) -> Result<bool, ()> {
         let ((mut ul, us), (mut vl, vs)) = (self.leader_and_size(u), self.leader_and_size(v));
         
         if ul != vl {
-            if us < vs { (ul, vl) = (vl, ul); w = -w; }
+            if !(us >= vs) { (u, v, ul, vl, w) = (v, u, vl, ul, -w); }
             self.nodes[ul] = Node::Leader(us+vs);
             self.nodes[vl] = Node::Child(ul);
-            // 頂点 u, v は経路圧縮されていることに注意。
-            // w = weight[v] - weight[u] = (diff[vl] + diff[v]) - (diff[ul] + diff[u]) と diff[ul] = 0 を diff[vl] について解く
             self.diff[vl] = self.diff[u] - self.diff[v] + w;
             Ok(true)
         } else {
@@ -145,5 +137,15 @@ impl WeightedUnionFind {
         let mut out = nest![void; self.nodes.len()];
         for u in 0..self.nodes.len() { out[self.leader(u)].push(u); }
         out.retain(|v| v.len() != 0); out
+    }
+}
+
+impl Debug for WeightedUnionFind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use itertools::Itertools;
+        let mut uf = self.clone();
+        write!(f, "[{}]", uf.groups().into_iter().map(
+            |v| format!("{{{}}}", v.into_iter().map(|i| format!("{i}: {}", uf.diff[i])).join(", "))
+        ).join(", "))
     }
 }

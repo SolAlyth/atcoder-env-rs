@@ -1,6 +1,7 @@
 #![allow(unused_must_use, non_snake_case)]
 
-use mylib::*;
+#[allow(unused_imports)]
+use {mylib::*, ac_library::ModInt998244353 as Mint};
 const INTERACTIVE: bool = false;
 
 fn solve() {
@@ -13,15 +14,6 @@ fn solve() {
 
 
 
-fn main() {
-    out.init(if INTERACTIVE || !SUBMISSION { EndFlag::Print } else {EndFlag::LineFeed});
-    solve();
-    out.print();
-}
+fn main() { out.init(if INTERACTIVE || !SUBMISSION { EndFlag::Print } else { EndFlag::LineFeed }); solve(); out.print() }
 
-// cargo test -- --nocapture
-#[test]
-fn test() {
-    out.init(EndFlag::Print);
-    out.print();
-}
+#[test] fn test() { out.init(EndFlag::Print); out.print(); }

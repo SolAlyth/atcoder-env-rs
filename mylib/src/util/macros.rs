@@ -22,14 +22,22 @@ macro_rules! nest {
 
 #[macro_export]
 macro_rules! min {
-    ($l:expr, $r:expr) => { { let (l, r) = ($l, $r); if l < r { l } else { r } } };
-    ($v:expr, $($vl:expr),+) => { min!($v, min!($($vl),+)) };
+    ($($vl:expr),+) => { [$($vl),+].into_iter().reduce(|x,y| if x<y {x} else {y}).unwrap() }
 }
 
 #[macro_export]
 macro_rules! max {
-    ($l:expr, $r:expr) => { { let (l, r) = ($l, $r); if l > r { l } else { r } } };
-    ($v:expr, $($vl:expr),+) => { max!($v, max!($($vl),+)) };
+    ($($vl:expr),+) => { [$($vl),+].into_iter().reduce(|x,y| if x>y {x} else {y}).unwrap() }
+}
+
+#[macro_export]
+macro_rules! chmin {
+    ($dst:expr; $($vl:expr),+) => { { let v = crate::min!($($vl),+); if v < $dst { $dst = v; true } else { false } } };
+}
+
+#[macro_export]
+macro_rules! chmax {
+    ($dst:expr; $($vl:expr),+) => { { let v = crate::max!($($vl),+); if $dst < v { $dst = v; true } else { false } } };
 }
 
 
@@ -44,8 +52,7 @@ macro_rules! elsedef {
 
 
 
-macro_rules! impl_for {
+/* macro_rules! impl_for {
     ($trait:ty; $($type:ty),+) => { $( impl $trait for $type {} )+ }
 }
-
-pub(crate) use impl_for;
+pub(crate) use impl_for; */

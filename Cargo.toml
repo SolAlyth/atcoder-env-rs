@@ -2,11 +2,11 @@
 name = "atcoder"
 version = "0.1.0"
 edition = "2021"
-default-run = "main3"
+default-run = "main2"
 
 [workspace]
 # cargo ... -p mylib
-members = ["mylib", "util"]
+members = ["mylib"]
 
 [dependencies]
 mylib = { path = "mylib" }

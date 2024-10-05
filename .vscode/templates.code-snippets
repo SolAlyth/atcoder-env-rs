@@ -2,7 +2,7 @@
 	"Initialize for AtCoder": {
 		"scope": "rust",
 		"prefix": "init",
-		"body": "#![allow(unused_must_use, non_snake_case)]\n\nuse mylib::*;\nconst INTERACTIVE: bool = false;\n\nfn solve() {\n\tinput! {\n\t\t$1\n\t}\n\t\n\t$0\n}\n\n\n\nfn main() {\n\tout.init(if INTERACTIVE || !SUBMISSION { EndFlag::Print } else {EndFlag::LineFeed});\n\tsolve();\n\tout.print();\n}\n\n// cargo test -- --nocapture\n#[test]\nfn test() {\n\tout.init(EndFlag::Print);\n\tout.print();\n}"
+		"body": "#![allow(unused_must_use, non_snake_case)]\n\n#[allow(unused_imports)]\nuse {mylib::*, ac_library::ModInt998244353 as Mint};\nconst INTERACTIVE: bool = false;\n\nfn solve() {\n\tinput! {\n\t\t$1\n\t}\n\t\n\t$0\n}\n\n\n\nfn main() { out.init(if INTERACTIVE || !SUBMISSION { EndFlag::Print } else { EndFlag::LineFeed }); solve(); out.print() }\n\n#[test] fn test() { out.init(EndFlag::Print); out.print(); }"
 	},
 	
 	"stderr print": {
@@ -29,62 +29,74 @@
 		"body": [
 			"match $0 {",
 			"\t'L' => {",
-			"\t\t/* i-- */",
+			"\t\t// j--",
 			"\t}",
 			"\t'R' => {",
-			"\t\t/* i++ */",
+			"\t\t// j++",
 			"\t}",
 			"\t'U' => {",
-			"\t\t/* j-- */",
+			"\t\t// i--",
 			"\t}",
 			"\t'D' => {",
-			"\t\t/* j++ */",
+			"\t\t// i++",
+			"\t_ => { unreachable!() }",
 			"\t}",
 			"}"
 		]
 	},
 	
-	"累積和": {
+	"最長増加部分列 (LIS)": {
 		"scope": "rust",
-		"prefix": "snp_wa",
+		"prefix": "snp_lis",
 		"body": [
-			"// [l..r] の和 == wa[r] - wa[l]",
-			"let mut wa = vec![0; $0.len()+1];",
-			"for i in 0..$0.len() { wa[i+1] = wa[i] + $0[i]; }"
+			"let mut lis = vec![${1:MAX_VALUE}; ${2:A.len()}+1];",
+			"let mut lis_len = vec![0; $2];",
+			"",
+			"for i in 0..$2 {",
+			"    let idx = lis.lower_bound(&${3:A[i]});",
+			"    lis[idx] = $3;",
+			"    lis_len[i] = idx+1;",
+			"}",
+			"",
+			"// let most_long = lis.lower_bound(&$1).unwrap();"
 		]
 	},
 	
-	"imos 法": {
+	"二次元累積和": {
 		"scope": "rust",
-		"prefix": "snp_imos",
+		"prefix": "snp_wa_2",
 		"body": [
-			// 入力が [0, a, b, c, ...] とかだと楽なんだけどな～～
-			
-			"// [l..r] の加算: { sa[l] += v; sa[r] -= v; }",
-			"let mut sa = vec![0; $0.len()];",
-			"for i in 0..$0.len() { sa[i] = $0[i] - elsedef!(i!=0; $0[i-1]); }",
-			"",
-			"",
-			"",
-			"let mut rest = vec![0; $0.len()];",
-			"for i in 0..$0.len() { rest[i] = sa[i] + elsedef!(i!=0; rest[i-1]); }"
-		]
-	},
-	
-	"幅優先探索 (BFS)": {
-		"scope": "rust",
-		"prefix": "snp_bfs",
-		"body": [
-			"let mut queue = VecDeque::from([$1]);",
-			"while let Some(q) = queue.pop_front() {",
-			"\tfor &to in &E[q] {",
-			"\t\tif todo!(\"skip condition\") { continue; }",
-			"\t\t",
-			"\t\t$0",
-			"\t\t",
-			"\t\tqueue.push_back(to);",
+			"// res[i][j] = sum of A[0..i][0..j]",
+			"let res = {",
+			"\tlet A: Vec<Vec<u64>>;",
+			"\tlet (h, w) = (A.len(), A[0].len());",
+			"\t",
+			"\tlet mut res = nest![0; h+1; w+1]; // res[i][j] = sum of A[0..i][0..j]",
+			"\tfor (i, j) in iproduct!(0..h, 0..w) {",
+			"\t\tres[i+1][j+1] = res[i][j+1] + res[i+1][j] - res[i][j];",
+			"\t\tres[i+1][j+1] += /* A[i][j] */;",
 			"\t}",
-			"}"
+			"\tres",
+			"};"
+		]
+	},
+	
+	"三次元累積和": {
+		"scope": "rust",
+		"prefix": "snp_wa_3",
+		"body": [
+			"",
+			"let res = {",
+			"\tlet (li, lj, lk) = (A.len(), A[0].len(), A[0][0].len());",
+			"\tlet f = |i, j, k| { /* A[i][j][k] */ };",
+			"\t",
+			"\tlet mut res = nest![0; li+1; lj+1, lk+1]; // res[i][j][k] = sum of A[0..i][0..j][0..k]",
+			"\tfor (i, j, k) in iproduct!(0..li, 0..lj, 0..lk) {",
+			"\t\tres[i+1][j+1][k+1] = res[i][j+1][k+1] + res[i+1][j][k+1] + res[i+1][j+1][k] + res[i][j][k] - res[i+1][j][k] - res[i][j+1][k] - res[i][j][k+1];",
+			"\t\tres[i+1][j+1][k+1] += f(i, j, k);",
+			"\t}",
+			"\tres",
+			"};"
 		]
 	},
 	

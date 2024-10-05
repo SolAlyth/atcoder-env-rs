@@ -1,6 +1,6 @@
 //! BitSet
 
-use std::{fmt::Debug, ops::{BitAnd, BitOr, BitXor, Index, Not}};
+use std::{fmt::Debug, ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Index, Not, Shl, ShlAssign, Shr, ShrAssign}};
 
 /// 最大 `usize::BITS-1 = 63` 個の `bool` 値を持てる構造体。
 /// 
@@ -10,7 +10,7 @@ use std::{fmt::Debug, ops::{BitAnd, BitOr, BitXor, Index, Not}};
 /// # Guarantee
 /// 
 /// + 使われない bit は 0 (`count_true` のため)
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct BitSet { len: usize, value: usize }
 
 impl BitSet {
@@ -54,13 +54,22 @@ impl BitSet {
     /// 全ての bit が `false` か判定する。
     pub fn is_empty(&self) -> bool { self.value == 0 }
     
-    /// `self[0]` から `self[len-1]` を `DoubleEndedIterator` で返す。
-    pub fn iter(self) -> impl DoubleEndedIterator<Item = bool> { (0..self.len).map(move |i| self[i]) }
+    /// `(i, BitSet[i])` を `DoubleEndedIterator` で返す。
+    pub fn iter(self) -> impl DoubleEndedIterator<Item = (usize, bool)> { (0..self.len).map(move |i| (i, self[i])) }
 }
 
-impl BitAnd for BitSet { type Output = Self; fn bitand(mut self, rhs: Self) -> Self::Output { assert_eq!(self.len, rhs.len); self.value &= rhs.value; self } }
-impl BitOr for BitSet { type Output = Self; fn bitor(mut self, rhs: Self) -> Self::Output { assert_eq!(self.len, rhs.len); self.value |= rhs.value; self } }
-impl BitXor for BitSet { type Output = Self; fn bitxor(mut self, rhs: Self) -> Self::Output { assert_eq!(self.len, rhs.len); self.value ^= rhs.value; self } }
+impl BitAnd for BitSet { type Output = Self; fn bitand(mut self, rhs: Self) -> Self::Output { self &= rhs; self } }
+impl BitOr for BitSet { type Output = Self; fn bitor(mut self, rhs: Self) -> Self::Output { self |= rhs; self } }
+impl BitXor for BitSet { type Output = Self; fn bitxor(mut self, rhs: Self) -> Self::Output { self ^= rhs; self } }
+impl BitAndAssign for BitSet { fn bitand_assign(&mut self, rhs: Self) { debug_assert_eq!(self.len, rhs.len); self.value &= rhs.value; } }
+impl BitOrAssign for BitSet { fn bitor_assign(&mut self, rhs: Self) { debug_assert_eq!(self.len, rhs.len); self.value |= rhs.value; } }
+impl BitXorAssign for BitSet { fn bitxor_assign(&mut self, rhs: Self) { debug_assert_eq!(self.len, rhs.len); self.value ^= rhs.value; } }
+
+impl Shl<usize> for BitSet { type Output = Self; fn shl(mut self, rhs: usize) -> Self::Output { self <<= rhs; self.masked() } }
+impl Shr<usize> for BitSet { type Output = Self; fn shr(mut self, rhs: usize) -> Self::Output { self >>= rhs; self } }
+impl ShlAssign<usize> for BitSet { fn shl_assign(&mut self, rhs: usize) { self.value <<= rhs; *self = self.masked(); } }
+impl ShrAssign<usize> for BitSet { fn shr_assign(&mut self, rhs: usize) { self.value >>= rhs; } }
+
 impl Not for BitSet { type Output = Self; fn not(mut self) -> Self::Output { self.value = !self.value; self.masked() } }
-impl Debug for BitSet { fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { write!(f, "{:?}({})", self.iter().collect::<Vec<_>>(), self.value) } }
-impl Index<usize> for BitSet { type Output = bool; fn index(&self, index: usize) -> &Self::Output { assert!(index < self.len); static A: [bool; 2] = [false, true]; &A[self.value>>index & 1] } }
+impl Debug for BitSet { fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { write!(f, "{:?}({})", (0..self.len).map(|i| self[i]).collect::<Vec<_>>(), self.value) } }
+impl Index<usize> for BitSet { type Output = bool; fn index(&self, index: usize) -> &Self::Output { assert!(index < self.len); &[false, true][self.value>>index & 1] } }
