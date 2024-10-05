@@ -63,7 +63,7 @@ impl IntUtil for usize {
 
 
 
-pub trait AsBound: RangeBounds<usize> {
+pub trait AsBounds: RangeBounds<usize> {
     /// `RangeBounds` を `st..ed` で表したときの `(st, ed)` を返す。
     /// 
     /// # Panics
@@ -87,4 +87,4 @@ pub trait AsBound: RangeBounds<usize> {
     }
 }
 
-impl<T: RangeBounds<usize>> AsBound for T {}
+impl<T: RangeBounds<usize>> AsBounds for T {}

@@ -74,7 +74,7 @@ pub use {
     std::mem::{swap, replace},
     itertools::{Itertools, iproduct, izip},
     superslice::Ext,
-    num::integer::{gcd, lcm, Roots},
+    num_integer::{gcd, lcm, Roots},
     ac_library,
     
     rand

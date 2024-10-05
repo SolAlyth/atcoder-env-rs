@@ -14,7 +14,7 @@ mod mylib {
         std::mem::{swap, replace},
         itertools::{Itertools, iproduct, izip},
         superslice::Ext,
-        num::integer::{gcd, lcm, Roots},
+        num_integer::{gcd, lcm, Roots},
         rand,
         ac_library
     };
@@ -201,7 +201,7 @@ mod mylib {
         }
         
         pub mod splay_tree {
-            use crate::mylib::util::traits::AsBound;
+            use crate::mylib::util::traits::AsBounds;
 
             use std::cell::Cell;
             use std::fmt::Debug;
@@ -759,8 +759,8 @@ mod mylib {
             use std::ops::{RangeBounds, Bound::*};
             pub trait RectUtil: Sized + Copy { type Rhs: Copy; const LRUD: [Self::Rhs; 4]; fn wrapping_add_signed(self, rhs: Self::Rhs) -> Self; fn apply_lrud(self) -> [Self; 4]; } impl RectUtil for (usize, usize) { type Rhs = (isize, isize); const LRUD: [Self::Rhs; 4] = [(0, -1), (0, 1), (-1, 0), (1, 0)]; fn wrapping_add_signed(self, rhs: Self::Rhs) -> Self { (self.0.wrapping_add_signed(rhs.0), self.1.wrapping_add_signed(rhs.1)) } fn apply_lrud(self) -> [Self; 4] { Self::LRUD.map(|d| self.wrapping_add_signed(d)) } } pub trait CharUtil: Clone { const lower: [Self; 26]; const upper: [Self; 26]; fn lower_to_us(self) -> usize; fn upper_to_us(self) -> usize; fn flip(self) -> Self; fn as_lrud(self) -> usize; } impl CharUtil for char { const lower: [char; 26] = { let (mut out, mut i) = (['_'; 26], 0); while i < 26 { out[i] = (i+97) as u8 as char; i += 1; } out }; const upper: [char; 26] = { let (mut out, mut i) = (['_'; 26], 0); while i < 26 { out[i] = (i+65) as u8 as char; i += 1; } out }; fn lower_to_us(self) -> usize { debug_assert!('a' <= self && self <= 'z'); self as usize - 97 } fn upper_to_us(self) -> usize { debug_assert!('A' <= self && self <= 'Z'); self as usize - 65 } fn flip(self) -> Self { (self as u8 ^ 32) as char } fn as_lrud(mut self) -> usize { self = self.to_ascii_uppercase(); ['L', 'R', 'U', 'D'].into_iter().position(|v| v == self).unwrap() } }
             pub trait IntUtil: Copy { fn bit(self, n: usize) -> bool; } impl IntUtil for usize { fn bit(self, n: usize) -> bool { self>>n & 1 == 1 } }
-            pub trait AsBound: RangeBounds<usize> {
-                fn as_bound(&self, sup: usize) -> [usize; 2] {
+            pub trait AsBounds: RangeBounds<usize> {
+                fn as_bounds(&self, sup: usize) -> [usize; 2] {
                     let l = match self.start_bound() {
                         Included(&v) => v,
                         Excluded(&v) => v+1,
@@ -777,15 +777,13 @@ mod mylib {
                     [l, r]
                 }
             }
-            impl<T: RangeBounds<usize>> AsBound for T {}
+            impl<T: RangeBounds<usize>> AsBounds for T {}
         }
         pub mod macros {
             #[macro_export] macro_rules! epr { ($($args:tt)*) => {} } #[macro_export] macro_rules! nest { (void; $n:expr) => { vec![vec![]; $n] }; (void; $n:expr $(;$m:expr)+) => { vec![nest![void$(;$m)+]; $n] }; () => { vec![] }; ($e:expr; $n:expr) => { vec![$e; $n] }; ($e:expr; $n:expr $(;$m:expr)+) => { vec![nest![$e$(;$m)+]; $n] }; } #[macro_export] macro_rules! min { ($($vl:expr),+) => { [$($vl),+].into_iter().reduce(|x,y| if x<y {x} else {y}).unwrap() } } #[macro_export] macro_rules! max { ($($vl:expr),+) => { [$($vl),+].into_iter().reduce(|x,y| if x>y {x} else {y}).unwrap() } } #[macro_export] macro_rules! chmin { ($dst:expr; $($vl:expr),+) => { { let v = crate::min!($($vl),+); if v < $dst { $dst = v; true } else { false } } }; } #[macro_export] macro_rules! chmax { ($dst:expr; $($vl:expr),+) => { { let v = crate::max!($($vl),+); if $dst < v { $dst = v; true } else { false } } }; } #[macro_export] macro_rules! elsedef { ($cond:expr; $v:expr) => { if $cond {$v} else {Default::default()} } }
         }
         pub mod func {
-            pub fn binary_search(low: usize, high: usize) -> Option<usize> {
-                if 1 < high.wrapping_sub(low) { Some(low.wrapping_add(high)/2) } else { None }
-            }
+            pub fn binary_search(low: usize, high: usize) -> Option<usize> { if 1 < high.wrapping_sub(low) { Some(low.wrapping_add(high)/2) } else { None } }
         }
         pub mod hyperint {
             #![allow(non_camel_case_types)] use std::{fmt::Debug, ops::{Add, Sub, Neg}}; #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord)] pub struct h64(pub i64); impl h64 { pub const MIN: h64 = h64(i64::MIN+1); pub const MAX: h64 = h64(i64::MAX); pub fn new(value: i64) -> Self { assert!(i64::MIN+2 <= value && value != i64::MAX); h64(value) } pub fn is_min(self) -> bool { self == h64::MIN } pub fn is_max(self) -> bool { self == h64::MAX } pub fn is_minmax(self) -> bool { self == h64::MIN || self == h64::MAX } } impl Add for h64 { type Output = Self; fn add(self, rhs: Self) -> Self::Output { match (self, rhs) { (h64::MAX, h64::MIN) | (h64::MIN, h64::MAX) => panic!("[@h64] MAX+MIN is undefined."), (h64::MAX, _) | (_, h64::MAX) => h64::MAX, (h64::MIN, _) | (_, h64::MIN) => h64::MIN, (l, r) => h64::new(l.0+r.0) } } } impl Add<i64> for h64 { type Output = Self; fn add(self, rhs: i64) -> Self::Output { if self.is_minmax() { self } else { h64::new(self.0+rhs) } } } impl Neg for h64 { type Output = Self; fn neg(mut self) -> Self::Output { self.0 += -1; self } } impl Sub for h64 { type Output = Self; fn sub(self, rhs: Self) -> Self::Output { self + -rhs } } impl Sub<i64> for h64 { type Output = Self; fn sub(self, rhs: i64) -> Self::Output { self + -rhs } } impl Debug for h64 { fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { if *self == h64::MIN { write!(f, "MIN") } else if *self == h64::MAX { write!(f, "MAX") } else { write!(f, "{}", self.0) } } }

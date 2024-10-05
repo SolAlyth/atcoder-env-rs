@@ -1,4 +1,4 @@
-use crate::mylib::util::traits::AsBound;
+use crate::mylib::util::traits::AsBounds;
 
 use std::cell::Cell;
 use std::fmt::Debug;
