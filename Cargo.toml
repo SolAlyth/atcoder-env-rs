@@ -6,7 +6,11 @@ default-run = "main2"
 
 [workspace]
 # cargo ... -p mylib
-members = ["mylib"]
+members = [
+    "mylib",
+    "external"
+]
 
 [dependencies]
 mylib = { path = "mylib" }
+external = { path = "external" }

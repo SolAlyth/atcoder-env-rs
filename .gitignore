@@ -1,12 +1,10 @@
-.vscode/*
+.vscode
 !.vscode/templates.code-snippets
 
-save
+save/
+src/
+target/
 
-src
-!mylib/src
+*.code-workspace
 
-target
-
-submit.txt
 out.txt

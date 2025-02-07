@@ -11,11 +11,9 @@ pub const SUBMISSION: bool = false;
 // pub const i107: i128 = 1000000007;
 
 pub mod ds {
-    pub mod bitset;
-    pub mod unionfind;
-    pub mod compress;
-    // pub mod sqrtset;
-    pub mod segtree;
+    pub mod unionfind; // updated!
+    pub mod compress; // updated!
+    pub mod segtree; // updated!
     // pub mod rangeset;
     
     pub mod multiset;
@@ -30,9 +28,9 @@ pub mod ds {
 
 pub mod algo {
     pub mod bellman_ford;
-    pub mod warshall_floyd;
+    // pub mod warshall_floyd;
     
-    pub mod seq;
+    // pub mod seq;
 }
 
 pub mod util {
@@ -45,37 +43,14 @@ pub mod util {
 }
 
 pub mod math {
-    pub mod prime;
-    pub mod barrett;
-    pub mod matrix;
+    // pub mod prime;
+    // pub mod barrett;
+    // pub mod matrix;
+    
+    pub mod optm;
 }
-
-/* pub mod geometry {
-    pub mod basis;
-} */
-
-pub mod traits {
-    pub mod abstracts;
-}
-
 
 #[doc(hidden)]
-pub use {
-    util::{
-        printer::{out, end, EndFlag}, traits::*, hyperint::h64, func::binary_search
-    },
-    
-    proconio::{
-        input, input_interactive,
-        marker::{Bytes as bytes, Chars as chars, Usize1 as usize1, Isize1 as isize1}
-    },
-    std::io::{BufReader, BufRead, stdin},
-    std::collections::{VecDeque, HashMap, HashSet, BTreeMap, BTreeSet},
-    std::mem::{swap, replace},
-    itertools::{Itertools, iproduct, izip},
-    superslice::Ext,
-    num_integer::{gcd, lcm, Roots},
-    ac_library,
-    
-    rand
+pub use util::{
+    printer::{out, end, EndFlag}, traits::*, hyperint::h64, func::binary_search
 };

@@ -19,7 +19,7 @@ impl<T: Ord> Compressed<T> {
     pub fn len(&self) -> usize { self.0.len() }
     
     /// 圧縮された `key` を返します。
-    pub fn key(&self, value: &T) -> usize { self.0.binary_search(value).unwrap() }
+    pub fn compressed_key(&self, value: &T) -> usize { self.0.binary_search(value).unwrap() }
     
     /// 圧縮前の `value` を復元します。
     pub fn restore(&self, key: usize) -> &T { &self.0[key] }

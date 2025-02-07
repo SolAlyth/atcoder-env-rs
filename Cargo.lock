@@ -12,6 +12,7 @@ checksum = "09e1ead7b72f44698f97266946c0576d00c9e2010858f5aba47aa4660177ef73"
 name = "atcoder"
 version = "0.1.0"
 dependencies = [
+ "external",
  "mylib",
 ]
 
@@ -32,6 +33,18 @@ name = "either"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fcaabb2fef8c910e7f4c7ce9f67a1283a1715879a7c230ca9d6d1ae31f16d91"
+
+[[package]]
+name = "external"
+version = "0.1.0"
+dependencies = [
+ "ac-library-rs",
+ "itertools",
+ "num-integer",
+ "proconio",
+ "rand",
+ "superslice",
+]
 
 [[package]]
 name = "getrandom"
@@ -62,14 +75,6 @@ checksum = "97b3888a4aecf77e811145cadf6eef5901f4782c53886191b2f693f24761847c"
 [[package]]
 name = "mylib"
 version = "0.1.0"
-dependencies = [
- "ac-library-rs",
- "itertools",
- "num-integer",
- "proconio",
- "rand",
- "superslice",
-]
 
 [[package]]
 name = "num-integer"

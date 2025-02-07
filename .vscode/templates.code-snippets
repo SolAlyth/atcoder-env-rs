@@ -2,7 +2,7 @@
 	"Initialize for AtCoder": {
 		"scope": "rust",
 		"prefix": "init",
-		"body": "#![allow(unused_must_use, non_snake_case)]\n\n#[allow(unused_imports)]\nuse {mylib::*, ac_library::ModInt998244353 as Mint};\nconst INTERACTIVE: bool = false;\n\nfn solve() {\n\tinput! {\n\t\t$1\n\t}\n\t\n\t$0\n}\n\n\n\nfn main() { out.init(if INTERACTIVE || !SUBMISSION { EndFlag::Print } else { EndFlag::LineFeed }); solve(); out.print() }\n\n#[test] fn test() { out.init(EndFlag::Print); out.print(); }"
+		"body": "#![allow(unused_must_use, non_snake_case)]\n\n#[allow(unused_imports)]\nuse {external::*, mylib::*, ac_library::ModInt998244353 as Mint};\nconst INTERACTIVE: bool = false;\n\nfn solve() {\n\tinput! {\n\t\t$1\n\t}\n\t\n\t$0\n}\n\n\n\nfn main() { out.init(if INTERACTIVE || !SUBMISSION { EndFlag::Print } else { EndFlag::LineFeed }); solve(); out.print() }\n\n#[test] fn test() { out.init(EndFlag::Print); out.print(); }"
 	},
 	
 	"stderr print": {
@@ -20,7 +20,11 @@
 	"unreachable match": {
 		"scope": "rust",
 		"prefix": "snp_match_unreachable",
-		"body": "_ => { unreachable!(); }"
+		"body": [
+			"match $0 {",
+			"\t_ => { unreachable!(); }",
+			"}"
+		]
 	},
 	
 	"LRUD match": {
@@ -29,16 +33,17 @@
 		"body": [
 			"match $0 {",
 			"\t'L' => {",
-			"\t\t// j--",
+			"\t\t// j--, (0, -1)",
 			"\t}",
 			"\t'R' => {",
-			"\t\t// j++",
+			"\t\t// j++, (0, 1)",
 			"\t}",
 			"\t'U' => {",
-			"\t\t// i--",
+			"\t\t// i--, (-1, 0)",
 			"\t}",
 			"\t'D' => {",
-			"\t\t// i++",
+			"\t\t// i++, (1, 0)",
+			"\t}",
 			"\t_ => { unreachable!() }",
 			"\t}",
 			"}"
@@ -99,15 +104,4 @@
 			"};"
 		]
 	},
-	
-	"test": {
-		"scope": "rust",
-		"prefix": "test",
-		"body": [
-			"#[test]",
-			"fn $1() {",
-			"\t$0",
-			"}"
-		]
-	}
 }

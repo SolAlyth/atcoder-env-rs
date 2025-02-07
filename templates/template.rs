@@ -1,7 +1,7 @@
 #![allow(unused_must_use, non_snake_case)]
 
 #[allow(unused_imports)]
-use {mylib::*, ac_library::ModInt998244353 as Mint};
+use {external::*, mylib::*, ac_library::ModInt998244353 as Mint};
 const INTERACTIVE: bool = false;
 
 fn solve() {

@@ -2,7 +2,6 @@
 macro_rules! epr {
     ($($args:tt)*) => {
         if !$crate::SUBMISSION { eprint!("\x1b[31m"); print!("{}", format!($($args)*).split('\n').map(|s| format!(">> {s}\n")).reduce(|acc,s| acc+&s).unwrap()); eprint!("\x1b[0m"); }
-        if $crate::SUBMISSION { /* do nothing */ }
     }
 }
 
@@ -20,33 +19,32 @@ macro_rules! nest {
     ($e:expr; $n:expr $(;$m:expr)+) => { vec![nest![$e$(;$m)+]; $n] };
 }
 
+
+
+// Float は Ord が使えないので reduce している
+
 #[macro_export]
 macro_rules! min {
-    ($($vl:expr),+) => { [$($vl),+].into_iter().reduce(|x,y| if x<y {x} else {y}).unwrap() }
+    ($($vl:expr),+) => { [$($vl),+].into_iter().reduce(|x,y| if x <= y {x} else {y}).unwrap() }
 }
 
 #[macro_export]
 macro_rules! max {
-    ($($vl:expr),+) => { [$($vl),+].into_iter().reduce(|x,y| if x>y {x} else {y}).unwrap() }
+    ($($vl:expr),+) => { [$($vl),+].into_iter().reduce(|x,y| if x >= y {x} else {y}).unwrap() }
 }
 
+/// `values < dst` であるとき `true` を返す。
 #[macro_export]
 macro_rules! chmin {
-    ($dst:expr; $($vl:expr),+) => { { let v = crate::min!($($vl),+); if v < $dst { $dst = v; true } else { false } } };
+    ($dst:expr; $v:expr) => { { let v = $v; if v < $dst { $dst = v; true } else { false } } };
+    ($dst:expr; $($vl:expr),+) => { crate::chmin!($dst; crate::min!($($vl),+)) }
 }
 
+/// `dst < values` であるとき `true` を返す。
 #[macro_export]
 macro_rules! chmax {
-    ($dst:expr; $($vl:expr),+) => { { let v = crate::max!($($vl),+); if $dst < v { $dst = v; true } else { false } } };
-}
-
-
-
-/// `elsedef!(cond; value)` の形で使う。
-/// `cond == true` のとき `value` を返し、そうでないとき `Default::default()` を返す。
-#[macro_export]
-macro_rules! elsedef {
-    ($cond:expr; $v:expr) => { if $cond {$v} else {Default::default()} }
+    ($dst:expr; $v:expr) => { { let v = $v; if $dst < v { $dst = v; true } else { false } } };
+    ($dst:expr; $($vl:expr),+) => { crate::chmax!($dst; crate::max!($($vl),+)) }
 }
 
 
