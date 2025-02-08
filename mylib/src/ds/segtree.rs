@@ -1,13 +1,14 @@
 use std::{fmt::Debug, mem, ops::{Index, IndexMut, RangeBounds}, slice::SliceIndex};
 use crate::mylib::util::traits::AsBounds;
 
+#[derive(Clone)]
 pub struct SegTree<Op: SegTreeOp> {
     tree: Vec<Op::Value>,
     lazy: Vec<Option<Op::Lazy>>,
     depth: u32
 }
 
-pub trait SegTreeOp {
+pub trait SegTreeOp: Clone {
     type Value: Clone + Debug;
     type Lazy: Clone;
     
@@ -176,17 +177,23 @@ impl<Op: SegTreeOp> SegTree<Op> {
     }
 }
 
-impl<Op: SegTreeOp> Clone for SegTree<Op> {
-    fn clone(&self) -> Self {
-        Self { tree: self.tree.clone(), lazy: self.lazy.clone(), depth: self.depth.clone() }
-    }
-}
-
 impl<Op: SegTreeOp> Debug for SegTree<Op> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut seg = self.clone();
         for i in 1..seg.tree.len() { seg.push(i); }
         f.debug_list().entries((0..self.depth).map(|i| self.tree[1<<i..1<<i+1].to_vec())).finish()
+    }
+}
+
+impl<Op: SegTreeOp> FromIterator<Op::Value> for SegTree<Op> {
+    fn from_iter<T: IntoIterator<Item = Op::Value>>(iter: T) -> Self {
+        let v = iter.into_iter().collect::<Vec<_>>();
+        let mut seg = Self::new(v.len());
+        {
+            let mut seg = seg.entry_all();
+            for (i, v) in v.into_iter().enumerate() { seg[i] = v; }
+        }
+        seg
     }
 }
 

@@ -11,10 +11,6 @@ mod mylib {
     };
     
     pub mod ds {
-        pub mod compress {
-            // source: ds/compress.rs
-        }
-        
         pub mod unionfind {
             // source: ds/unionfind.rs
         }
@@ -26,6 +22,16 @@ mod mylib {
         pub mod splay_tree {
             // source: ds/splay_tree.rs
         }
+    }
+    
+    pub mod algo {
+        pub mod rolling_hash {
+            // source: algo/rolling_hash.rs
+        }
+    }
+    
+    pub mod abstracts {
+        // source: abstracts.rs
     }
     
     pub mod math {
